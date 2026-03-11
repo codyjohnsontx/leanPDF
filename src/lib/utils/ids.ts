@@ -1,7 +1,3 @@
-export function createId(prefix: string) {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-
-  return `${prefix}-${Math.random().toString(36).slice(2, 11)}`;
+export function createId(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID()}`;
 }

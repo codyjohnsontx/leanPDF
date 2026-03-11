@@ -28,8 +28,12 @@ export function PageThumbnail({ pdfDocument, pageNumber, isActive, onClick }: Pa
 
       if (cancelled) return;
 
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
       renderTask = page.render({
         canvas,
         canvasContext: context,

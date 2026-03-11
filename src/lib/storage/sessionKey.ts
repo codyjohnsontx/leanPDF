@@ -18,6 +18,8 @@ export async function getStorageKey(): Promise<CryptoKey> {
     { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
   );
   const jwk = await crypto.subtle.exportKey('jwk', _cachedKey);
+  // NOTE: The JWK key is stored in localStorage (plaintext on disk). This protects against
+  // accidental IndexedDB blob leakage but not against an attacker with full browser profile access.
   localStorage.setItem(STORAGE_KEY, JSON.stringify(jwk));
   return _cachedKey;
 }

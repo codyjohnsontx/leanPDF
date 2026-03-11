@@ -10,6 +10,9 @@ export async function mergePdfs(files: File[]): Promise<Uint8Array> {
     } catch {
       throw new Error(`Could not load "${file.name}". It may be password-protected or corrupted.`);
     }
+    if (src.isEncrypted) {
+      throw new Error(`"${file.name}" is password-protected and cannot be merged.`);
+    }
     const indices = src.getPageIndices();
     const copied = await output.copyPages(src, indices);
     copied.forEach((page) => output.addPage(page));

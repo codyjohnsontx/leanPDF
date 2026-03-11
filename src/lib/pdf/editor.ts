@@ -8,13 +8,9 @@ import {
   StandardFonts,
   rgb,
 } from 'pdf-lib';
-import { PDF as ProtectedPdf } from '@libpdf/core';
-import { AnnotationMode, GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
-import workerSrc from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import type {
   AnnotationRecord,
   DocumentProtectionStatus,
-  FormFieldSchema,
   InkPayload,
   LinePayload,
   NotePayload,
@@ -23,10 +19,7 @@ import type {
   SignaturePlacementPayload,
   StoredSignatureAsset,
 } from './types';
-import type { SearchIndexEntry } from '../utils/search';
 import { unlockPdfForEditing } from './security';
-
-GlobalWorkerOptions.workerSrc = workerSrc;
 
 function hexToRgbTriplet(hex: string) {
   const normalized = hex.replace('#', '');
@@ -243,95 +236,6 @@ async function drawAnnotation(
   }
 }
 
-export async function loadPdfDocument(bytes: Uint8Array, password?: string): Promise<PDFDocumentProxy> {
-  const loadingTask = getDocument({ data: bytes.slice(), password });
-  return loadingTask.promise;
-}
-
-export async function buildPdfSearchIndex(pdfDocument: PDFDocumentProxy): Promise<SearchIndexEntry[]> {
-  const pages = Array.from({ length: pdfDocument.numPages }, (_, index) => index + 1);
-  return Promise.all(
-    pages.map(async (pageNumber) => {
-      const page = await pdfDocument.getPage(pageNumber);
-      const content = await page.getTextContent();
-      const text = content.items
-        .map((item) => ('str' in item ? item.str : ''))
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      return {
-        pageNumber,
-        text,
-      };
-    }),
-  );
-}
-
-export async function extractFormSchema(bytes: Uint8Array, password?: string): Promise<FormFieldSchema[]> {
-  const pdfDoc = await ProtectedPdf.load(bytes, password ? { credentials: password } : undefined);
-  const form = pdfDoc.getForm();
-  if (!form) {
-    return [];
-  }
-
-  return form.getFields().map((field) => {
-    if (field.type === 'text') {
-      const textField = form.getTextField(field.name);
-      return {
-        name: field.name,
-        kind: 'text',
-        value: textField?.getValue() ?? '',
-      } satisfies FormFieldSchema;
-    }
-
-    if (field.type === 'checkbox') {
-      const checkboxField = form.getCheckbox(field.name);
-      return {
-        name: field.name,
-        kind: 'checkbox',
-        value: checkboxField?.isChecked() ?? false,
-      } satisfies FormFieldSchema;
-    }
-
-    if (field.type === 'dropdown') {
-      const dropdownField = form.getDropdown(field.name);
-      return {
-        name: field.name,
-        kind: 'dropdown',
-        value: dropdownField?.getValue() ?? '',
-        options: dropdownField?.getOptions().map((option) => option.value) ?? [],
-      } satisfies FormFieldSchema;
-    }
-
-    if (field.type === 'listbox') {
-      const listboxField = form.getListBox(field.name);
-      return {
-        name: field.name,
-        kind: 'option-list',
-        value: listboxField?.getValue() ?? [],
-        options: listboxField?.getOptions().map((option) => option.value) ?? [],
-      } satisfies FormFieldSchema;
-    }
-
-    if (field.type === 'radio') {
-      const radioField = form.getRadioGroup(field.name);
-      return {
-        name: field.name,
-        kind: 'radio',
-        value: radioField?.getValue() ?? '',
-        options: radioField?.getOptions() ?? [],
-      } satisfies FormFieldSchema;
-    }
-
-    return {
-      name: field.name,
-      kind: 'unknown',
-      value: '',
-    } satisfies FormFieldSchema;
-  });
-}
-
 export async function exportEditedPdf(options: {
   bytes: Uint8Array;
   annotations: AnnotationRecord[];
@@ -369,5 +273,3 @@ export async function exportEditedPdf(options: {
   const saved = await pdfDoc.save();
   return new Uint8Array(saved);
 }
-
-export { AnnotationMode };

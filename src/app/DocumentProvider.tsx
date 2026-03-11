@@ -1,8 +1,10 @@
 import {
   startTransition,
+  useCallback,
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
@@ -12,8 +14,6 @@ import { documentReducer, initialDocumentState, type ActiveDocument } from './do
 import { createId } from '../lib/utils/ids';
 import { listRecentDocuments, sessionStore } from '../lib/storage/sessionStore';
 import { listSignatures, removeSignature, saveSignature } from '../lib/storage/signatureStore';
-import { exportEditedPdf } from '../lib/pdf/pdf';
-import { authenticatePdfAccess, exportProtectedPdf } from '../lib/pdf/security';
 import { downloadBytes } from '../lib/utils/download';
 import type {
   AnnotationRecord,
@@ -22,9 +22,12 @@ import type {
   ExportOptions,
   FormFieldSchema,
   OpenDocumentResult,
+  StoredSignatureAsset,
   ViewerRotation,
   ViewerTool,
 } from '../lib/pdf/types';
+
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
 function createDraftDocument(options: {
   id: string;
@@ -69,6 +72,24 @@ export function DocumentProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(documentReducer, initialDocumentState);
   const [isBusy, setIsBusy] = useState(false);
   const navigate = useNavigate();
+
+  // M-5: module-level promise caches moved into refs so HMR invalidates them correctly
+  const securityModuleRef = useRef<Promise<typeof import('../lib/pdf/security')> | null>(null);
+  const editorModuleRef = useRef<Promise<typeof import('../lib/pdf/editor')> | null>(null);
+
+  function loadSecurityModule() {
+    if (!securityModuleRef.current) {
+      securityModuleRef.current = import('../lib/pdf/security');
+    }
+    return securityModuleRef.current;
+  }
+
+  function loadEditorModule() {
+    if (!editorModuleRef.current) {
+      editorModuleRef.current = import('../lib/pdf/editor');
+    }
+    return editorModuleRef.current;
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -119,6 +140,64 @@ export function DocumentProvider({ children }: PropsWithChildren) {
     };
   }, [state.activeDocument, state.hydrated]);
 
+  // H-2: Handlers that only call dispatch() get stable useCallback identities.
+  // dispatch from useReducer is guaranteed stable, so these never change.
+  const setPageCount = useCallback((pageCount: number) => {
+    dispatch({ type: 'set-page-count', pageCount });
+  }, []);
+
+  const setCurrentPage = useCallback((currentPage: number) => {
+    dispatch({ type: 'set-current-page', currentPage });
+  }, []);
+
+  const setZoom = useCallback((zoom: number) => {
+    dispatch({ type: 'set-zoom', zoom: Math.max(0.55, Math.min(2.4, zoom)) });
+  }, []);
+
+  const setRotation = useCallback((rotation: ViewerRotation) => {
+    dispatch({ type: 'set-rotation', rotation });
+  }, []);
+
+  const setFormSchema = useCallback((formSchema: FormFieldSchema[]) => {
+    dispatch({ type: 'set-form-schema', formSchema });
+  }, []);
+
+  const setFormValue = useCallback((name: string, value: string | string[] | boolean) => {
+    dispatch({ type: 'set-form-value', name, value });
+  }, []);
+
+  const upsertAnnotation = useCallback((annotation: AnnotationRecord) => {
+    dispatch({ type: 'upsert-annotation', annotation });
+  }, []);
+
+  const removeAnnotation = useCallback((annotationId: string) => {
+    dispatch({ type: 'remove-annotation', annotationId });
+  }, []);
+
+  const selectAnnotation = useCallback((annotationId: string | null) => {
+    dispatch({ type: 'select-annotation', annotationId });
+  }, []);
+
+  const setTool = useCallback((tool: ViewerTool) => {
+    dispatch({ type: 'set-tool', tool });
+  }, []);
+
+  const setSelectedSignature = useCallback((signatureId: string | null) => {
+    dispatch({ type: 'set-selected-signature', signatureId });
+  }, []);
+
+  const addSignatureAsset = useCallback(async (signature: StoredSignatureAsset) => {
+    await saveSignature(signature);
+    dispatch({ type: 'add-signature', signature });
+  }, []);
+
+  const deleteSignatureAsset = useCallback(async (signatureId: string) => {
+    await removeSignature(signatureId);
+    dispatch({ type: 'remove-signature', signatureId });
+  }, []);
+
+  // Handlers that read state.activeDocument or state.signatures are kept in useMemo
+  // so they only rebuild when those specific slices change.
   const value = useMemo<DocumentContextValue>(
     () => ({
       activeDocument: state.activeDocument,
@@ -126,10 +205,20 @@ export function DocumentProvider({ children }: PropsWithChildren) {
       signatures: state.signatures,
       hydrated: state.hydrated,
       isBusy,
+      // H-3: file size guard added before arrayBuffer()
       async openFile(file, options) {
+        if (file.size > MAX_FILE_SIZE) {
+          console.error(`File "${file.name}" exceeds the 100 MB limit and cannot be opened.`);
+          return {
+            kind: 'error',
+            message: `"${file.name}" exceeds the 100 MB size limit.`,
+          } satisfies OpenDocumentResult;
+        }
+
         setIsBusy(true);
         try {
           const bytes = new Uint8Array(await file.arrayBuffer());
+          const { authenticatePdfAccess } = await loadSecurityModule();
           const access = await authenticatePdfAccess({
             bytes,
             password: options?.password,
@@ -175,6 +264,7 @@ export function DocumentProvider({ children }: PropsWithChildren) {
 
           const protectionStatus = record.protectionStatus ?? { kind: 'unencrypted' as const };
 
+          const { authenticatePdfAccess } = await loadSecurityModule();
           const access = await authenticatePdfAccess({
             bytes: record.bytes,
             password: protectionStatus.kind === 'encrypted' ? options?.password : undefined,
@@ -214,52 +304,25 @@ export function DocumentProvider({ children }: PropsWithChildren) {
           setIsBusy(false);
         }
       },
-      setPageCount(pageCount) {
-        dispatch({ type: 'set-page-count', pageCount });
-      },
-      setCurrentPage(currentPage) {
-        dispatch({ type: 'set-current-page', currentPage });
-      },
-      setZoom(zoom) {
-        dispatch({ type: 'set-zoom', zoom: Math.max(0.55, Math.min(2.4, zoom)) });
-      },
-      setRotation(rotation) {
-        dispatch({ type: 'set-rotation', rotation });
-      },
-      setFormSchema(formSchema) {
-        dispatch({ type: 'set-form-schema', formSchema });
-      },
-      setFormValue(name, value) {
-        dispatch({ type: 'set-form-value', name, value });
-      },
-      upsertAnnotation(annotation) {
-        dispatch({ type: 'upsert-annotation', annotation });
-      },
-      removeAnnotation(annotationId) {
-        dispatch({ type: 'remove-annotation', annotationId });
-      },
-      selectAnnotation(annotationId) {
-        dispatch({ type: 'select-annotation', annotationId });
-      },
-      setTool(tool) {
-        dispatch({ type: 'set-tool', tool });
-      },
-      async addSignatureAsset(signature) {
-        await saveSignature(signature);
-        dispatch({ type: 'add-signature', signature });
-      },
-      async deleteSignatureAsset(signatureId) {
-        await removeSignature(signatureId);
-        dispatch({ type: 'remove-signature', signatureId });
-      },
-      setSelectedSignature(signatureId) {
-        dispatch({ type: 'set-selected-signature', signatureId });
-      },
+      setPageCount,
+      setCurrentPage,
+      setZoom,
+      setRotation,
+      setFormSchema,
+      setFormValue,
+      upsertAnnotation,
+      removeAnnotation,
+      selectAnnotation,
+      setTool,
+      addSignatureAsset,
+      deleteSignatureAsset,
+      setSelectedSignature,
       async exportDocument(options: ExportOptions) {
         if (!state.activeDocument) {
           return;
         }
 
+        const { exportEditedPdf } = await loadEditorModule();
         const standardBytes = await exportEditedPdf({
           bytes: state.activeDocument.bytes,
           annotations: state.activeDocument.annotations,
@@ -270,7 +333,7 @@ export function DocumentProvider({ children }: PropsWithChildren) {
         });
         const bytes =
           options.mode === 'protected'
-            ? await exportProtectedPdf({
+            ? await (await loadSecurityModule()).exportProtectedPdf({
                 bytes: standardBytes,
                 password: options.password ?? '',
               })
@@ -279,7 +342,29 @@ export function DocumentProvider({ children }: PropsWithChildren) {
         downloadBytes(`${exportedName}-leanpdf.pdf`, bytes, 'application/pdf');
       },
     }),
-    [isBusy, navigate, state.activeDocument, state.hydrated, state.recentDocuments, state.signatures],
+    // Stable callbacks are not listed here because they never change.
+    // Only the values that actually require the memo to rebuild are listed.
+    [
+      isBusy,
+      navigate,
+      state.activeDocument,
+      state.hydrated,
+      state.recentDocuments,
+      state.signatures,
+      setPageCount,
+      setCurrentPage,
+      setZoom,
+      setRotation,
+      setFormSchema,
+      setFormValue,
+      upsertAnnotation,
+      removeAnnotation,
+      selectAnnotation,
+      setTool,
+      addSignatureAsset,
+      deleteSignatureAsset,
+      setSelectedSignature,
+    ],
   );
 
   return <DocumentContext.Provider value={value}>{children}</DocumentContext.Provider>;

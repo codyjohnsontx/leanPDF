@@ -12,7 +12,7 @@ export function SiteLayout() {
         <div className="site-header-inner">
           <BrandMark />
           <nav className="site-nav">
-            <Link className="ghost-button site-nav-link" to="/">Tools</Link>
+            <Link className="ghost-button site-nav-link" to="/tools">Tools</Link>
             <Link className="ghost-button site-nav-link" to="/open">Open PDF</Link>
             {activeDocument ? (
               <Link className="pill-button site-nav-cta" to="/viewer">Resume draft</Link>

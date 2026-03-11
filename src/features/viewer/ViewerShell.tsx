@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useDocument } from '../../app/useDocument';
 import { createId } from '../../lib/utils/ids';
-import { buildPdfSearchIndex, extractFormSchema, loadPdfDocument } from '../../lib/pdf/pdf';
+import { buildPdfSearchIndex, loadPdfDocument } from '../../lib/pdf/viewer';
 import type {
   FormFieldSchema,
   NotePayload,
@@ -33,6 +33,13 @@ import { buildSearchResults } from '../../lib/utils/search';
 import { ExportModal } from './ExportModal';
 import { PageThumbnail } from './PageThumbnail';
 import { PdfPageView } from './PdfPageView';
+
+let formsModulePromise: Promise<typeof import('../../lib/pdf/forms')> | null = null;
+
+function loadFormsModule() {
+  formsModulePromise ??= import('../../lib/pdf/forms');
+  return formsModulePromise;
+}
 
 const TOOLBAR: Array<{ id: ViewerTool; label: string; icon: React.ReactNode }> = [
   { id: 'move', label: 'Move', icon: <Hand size={14} /> },
@@ -329,7 +336,9 @@ export function ViewerShell() {
     void (async () => {
       const [document, schema] = await Promise.all([
         loadPdfDocument(activeDocument.bytes, activeDocument.accessPassword ?? undefined),
-        extractFormSchema(activeDocument.bytes, activeDocument.accessPassword ?? undefined),
+        loadFormsModule().then(({ extractFormSchema }) =>
+          extractFormSchema(activeDocument.bytes, activeDocument.accessPassword ?? undefined),
+        ),
       ]);
 
       if (cancelled) {
@@ -342,10 +351,12 @@ export function ViewerShell() {
       setPageCount(document.numPages);
       setFormSchema(schema);
 
-      const entries = await buildPdfSearchIndex(document);
-      if (!cancelled) {
-        setSearchIndex(entries);
+      const entries = await buildPdfSearchIndex(document, () => cancelled);
+      if (cancelled) {
+        return;
       }
+
+      setSearchIndex(entries);
     })();
 
     return () => {

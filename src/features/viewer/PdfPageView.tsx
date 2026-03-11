@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { AnnotationMode } from '../../lib/pdf/pdf';
+import { AnnotationMode } from '../../lib/pdf/viewer';
 import type { AnnotationRecord, StoredSignatureAsset, ViewerRotation, ViewerTool } from '../../lib/pdf/types';
 import { AnnotationOverlay } from '../annotations/AnnotationOverlay';
+
+const PLACEHOLDER_FALLBACK = { width: 612, height: 792 };
 
 type PdfPageViewProps = {
   pdfDocument: PDFDocumentProxy;
@@ -15,6 +17,7 @@ type PdfPageViewProps = {
   selectedSignature: StoredSignatureAsset | null;
   onCommitAnnotation: (annotation: AnnotationRecord) => void;
   onSelectAnnotation: (annotationId: string | null) => void;
+  placeholderSize?: { width: number; height: number };
 };
 
 export function PdfPageView({
@@ -28,11 +31,35 @@ export function PdfPageView({
   selectedSignature,
   onCommitAnnotation,
   onSelectAnnotation,
+  placeholderSize,
 }: PdfPageViewProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const articleRef = useRef<HTMLElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [inView, setInView] = useState(false);
+
+  // One-shot IntersectionObserver: once visible, never revert.
+  useEffect(() => {
+    const node = articleRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
+    if (!inView) return;
+
     let cancelled = false;
     let renderTask: { cancel: () => void; promise: Promise<void> } | null = null;
 
@@ -79,10 +106,15 @@ export function PdfPageView({
       cancelled = true;
       renderTask?.cancel();
     };
-  }, [pageNumber, pdfDocument, rotation, zoom]);
+  }, [inView, pageNumber, pdfDocument, rotation, zoom]);
+
+  const ph = placeholderSize ?? PLACEHOLDER_FALLBACK;
+  const placeholderWidth = ph.width * zoom;
+  const placeholderHeight = ph.height * zoom;
 
   return (
     <article
+      ref={articleRef}
       data-page-number={pageNumber}
       style={{
         position: 'relative',
@@ -109,15 +141,28 @@ export function PdfPageView({
       >
         Page {pageNumber}
       </div>
-      <canvas
-        ref={canvasRef}
-        style={{
-          display: 'block',
-          borderRadius: '20px',
-          boxShadow: '0 16px 36px rgba(0,0,0,0.18)',
-          background: '#fff',
-        }}
-      />
+
+      {inView ? (
+        <canvas
+          ref={canvasRef}
+          style={{
+            display: 'block',
+            borderRadius: '20px',
+            boxShadow: '0 16px 36px rgba(0,0,0,0.18)',
+            background: '#fff',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            display: 'block',
+            width: `${placeholderWidth}px`,
+            height: `${placeholderHeight}px`,
+            borderRadius: '20px',
+            background: 'rgba(255,255,255,0.06)',
+          }}
+        />
+      )}
 
       {size.width > 0 && size.height > 0 ? (
         <AnnotationOverlay

@@ -8,10 +8,11 @@ interface Props {
   children: (files: File[]) => ReactNode;
   actionLabel: string;
   onAction: (files: File[]) => Promise<{ filename: string; data: Uint8Array | Blob }>;
+  onFilesChange?: (files: File[]) => void;
   accept?: string;
 }
 
-export function PdfToolShell({ multiple = false, children, actionLabel, onAction, accept = 'application/pdf,.pdf' }: Props) {
+export function PdfToolShell({ multiple = false, children, actionLabel, onAction, onFilesChange, accept = 'application/pdf,.pdf' }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -22,7 +23,9 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
   function addFiles(incoming: FileList | null) {
     if (!incoming) return;
     const pdfs = Array.from(incoming).filter((f) => f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf');
-    setFiles((prev) => (multiple ? [...prev, ...pdfs] : pdfs.slice(0, 1)));
+    const next = multiple ? [...files, ...pdfs] : pdfs.slice(0, 1);
+    setFiles(next);
+    onFilesChange?.(next);
     setResult(null);
     setError(null);
   }
