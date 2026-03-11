@@ -22,6 +22,13 @@ leanPDF is a web-first, local-first PDF tool built with React, TypeScript, `pdf.
   - uploaded image signatures
 - Export back to PDF using local writeback
 
+## Security
+
+- **Draft storage (IndexedDB) is encrypted at rest.** PDF bytes are encrypted with AES-GCM-256 using the Web Crypto API before being written to IndexedDB. The key is generated once per browser profile and stored as a JWK in `localStorage`. A fresh random IV is used on every save.
+- **Password-protected export** uses AES-256 applied by `@libpdf/core` at export time.
+- **Passwords are never stored** — they are held in memory only for the duration of the session.
+- **No server involved** — all encryption, decryption, and document processing happens locally in the browser.
+
 ## Commands
 
 ```bash
