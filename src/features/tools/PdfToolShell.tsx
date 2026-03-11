@@ -31,7 +31,9 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    const newFiles = files.filter((_, i) => i !== index);
+    setFiles(newFiles);
+    onFilesChange?.(newFiles);
   }
 
   async function handleAction() {
@@ -61,6 +63,7 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
 
   function handleReset() {
     setFiles([]);
+    onFilesChange?.([]);
     setResult(null);
     setError(null);
     setProgress(null);

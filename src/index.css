@@ -921,7 +921,8 @@ img {
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.pdf-preview-card:hover {
+.pdf-preview-card:hover,
+.pdf-preview-card.is-rotated {
   border-color: rgba(245, 171, 53, 0.28);
   box-shadow: 0 0 0 1px rgba(245, 171, 53, 0.10) inset;
 }

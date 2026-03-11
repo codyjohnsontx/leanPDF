@@ -11,25 +11,29 @@ async function pageToBlob(
   quality: number,
 ): Promise<Blob> {
   const page = await pdf.getPage(pageNumber);
-  const viewport = page.getViewport({ scale });
+  try {
+    const viewport = page.getViewport({ scale });
 
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const ctx = canvas.getContext('2d')!;
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d')!;
 
-  await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+    await page.render({ canvasContext: ctx, viewport, canvas }).promise;
 
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas export failed'));
-      },
-      `image/${format}`,
-      quality,
-    );
-  });
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas export failed'));
+        },
+        `image/${format}`,
+        quality,
+      );
+    });
+  } finally {
+    page.cleanup();
+  }
 }
 
 export async function exportPdfAsImages(

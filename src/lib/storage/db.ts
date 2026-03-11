@@ -19,10 +19,14 @@ type OpenPdfDb = {
     key: string;
     value: StoredSignatureAsset;
   };
+  keys: {
+    key: string;
+    value: { id: string; key: CryptoKey };
+  };
 };
 
 export function getDb() {
-  return openDB<OpenPdfDb>('leanpdf-db', 2, {
+  return openDB<OpenPdfDb>('leanpdf-db', 3, {
     upgrade(database, oldVersion) {
       if (oldVersion < 1) {
         database.createObjectStore('recents', { keyPath: 'id' });
@@ -34,6 +38,9 @@ export function getDb() {
           database.deleteObjectStore('drafts');
         }
         database.createObjectStore('drafts', { keyPath: 'id' });
+      }
+      if (oldVersion < 3) {
+        database.createObjectStore('keys', { keyPath: 'id' });
       }
     },
   });

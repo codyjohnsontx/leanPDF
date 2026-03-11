@@ -109,8 +109,9 @@ export function PdfPageView({
   }, [inView, pageNumber, pdfDocument, rotation, zoom]);
 
   const ph = placeholderSize ?? PLACEHOLDER_FALLBACK;
-  const placeholderWidth = ph.width * zoom;
-  const placeholderHeight = ph.height * zoom;
+  const rotated = rotation % 180 !== 0;
+  const placeholderWidth = (rotated ? ph.height : ph.width) * zoom;
+  const placeholderHeight = (rotated ? ph.width : ph.height) * zoom;
 
   return (
     <article

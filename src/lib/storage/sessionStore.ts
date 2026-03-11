@@ -8,44 +8,13 @@ function toStoredDraftRecord(
   encryptedBytes: Uint8Array<ArrayBuffer>,
   iv: Uint8Array<ArrayBuffer>,
 ): StoredDraftRecord {
-  return {
-    id: data.id,
-    documentId: data.documentId,
-    name: data.name,
-    pageCount: data.pageCount,
-    currentPage: data.currentPage,
-    zoom: data.zoom,
-    rotation: data.rotation,
-    hasUnsavedChanges: data.hasUnsavedChanges,
-    annotations: data.annotations,
-    formValues: data.formValues,
-    selectedTool: data.selectedTool,
-    selectedSignatureAssetId: data.selectedSignatureAssetId,
-    protectionStatus: data.protectionStatus,
-    lastOpenedAt: data.lastOpenedAt,
-    encryptedBytes,
-    iv,
-  };
+  const { bytes: _bytes, ...rest } = data;
+  return { ...rest, encryptedBytes, iv };
 }
 
 function toDraftSessionRecord(stored: StoredDraftRecord, bytes: Uint8Array): DraftSessionRecord {
-  return {
-    id: stored.id,
-    documentId: stored.documentId,
-    name: stored.name,
-    bytes,
-    pageCount: stored.pageCount,
-    currentPage: stored.currentPage,
-    zoom: stored.zoom,
-    rotation: stored.rotation,
-    hasUnsavedChanges: stored.hasUnsavedChanges,
-    annotations: stored.annotations,
-    formValues: stored.formValues,
-    selectedTool: stored.selectedTool,
-    selectedSignatureAssetId: stored.selectedSignatureAssetId,
-    protectionStatus: stored.protectionStatus,
-    lastOpenedAt: stored.lastOpenedAt,
-  };
+  const { encryptedBytes: _enc, iv: _iv, ...rest } = stored;
+  return { ...rest, bytes };
 }
 
 export const sessionStore: DraftStore = {

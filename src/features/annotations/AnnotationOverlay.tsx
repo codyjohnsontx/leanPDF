@@ -379,7 +379,7 @@ export function AnnotationOverlay({
       const payload: InkPayload = {
         color: TOOL_COLORS.ink,
         thickness: 2.8,
-        strokes: draft.strokes,
+        strokes: [activeStrokeRef.current ?? []],
       };
       onCommit({
         id: createId('annotation'),

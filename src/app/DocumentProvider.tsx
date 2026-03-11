@@ -342,29 +342,9 @@ export function DocumentProvider({ children }: PropsWithChildren) {
         downloadBytes(`${exportedName}-leanpdf.pdf`, bytes, 'application/pdf');
       },
     }),
-    // Stable callbacks are not listed here because they never change.
     // Only the values that actually require the memo to rebuild are listed.
-    [
-      isBusy,
-      navigate,
-      state.activeDocument,
-      state.hydrated,
-      state.recentDocuments,
-      state.signatures,
-      setPageCount,
-      setCurrentPage,
-      setZoom,
-      setRotation,
-      setFormSchema,
-      setFormValue,
-      upsertAnnotation,
-      removeAnnotation,
-      selectAnnotation,
-      setTool,
-      addSignatureAsset,
-      deleteSignatureAsset,
-      setSelectedSignature,
-    ],
+    // Stable useCallback setters are intentionally omitted — they never change.
+    [isBusy, navigate, state.activeDocument, state.hydrated, state.recentDocuments, state.signatures],
   );
 
   return <DocumentContext.Provider value={value}>{children}</DocumentContext.Provider>;

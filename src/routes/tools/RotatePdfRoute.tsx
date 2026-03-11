@@ -108,7 +108,7 @@ function PdfPreviewGrid({ file, pageRotations, onRotate }: PreviewGridProps) {
         {Array.from({ length: limit }, (_, i) => i + 1).map((n) => {
           const rotation = pageRotations[n - 1] ?? 0;
           return (
-            <div key={n} className="pdf-preview-card">
+            <div key={n} className={`pdf-preview-card${rotation !== 0 ? ' is-rotated' : ''}`}>
               <div className="pdf-preview-canvas-wrap">
                 <canvas
                   ref={(el) => {
