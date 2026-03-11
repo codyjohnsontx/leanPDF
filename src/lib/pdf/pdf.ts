@@ -244,7 +244,7 @@ async function drawAnnotation(
 }
 
 export async function loadPdfDocument(bytes: Uint8Array, password?: string): Promise<PDFDocumentProxy> {
-  const loadingTask = getDocument({ data: bytes, password });
+  const loadingTask = getDocument({ data: bytes.slice(), password });
   return loadingTask.promise;
 }
 

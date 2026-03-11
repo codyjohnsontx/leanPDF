@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useDocument } from '../app/useDocument';
+import { BrandMark } from '../app/BrandMark';
 
 export function LandingRoute() {
   const { activeDocument } = useDocument();
@@ -9,12 +10,7 @@ export function LandingRoute() {
       <div className="landing-backdrop" />
       <section className="landing-frame">
         <header className="landing-header">
-          <Link className="landing-brand-link" to="/" aria-label="Go to home">
-            <div className="landing-brand">
-              <strong className="landing-wordmark">leanPDF</strong>
-              <span className="landing-tagline">Focused PDF workspace</span>
-            </div>
-          </Link>
+          <BrandMark />
 
           <div className="landing-header-actions">
             <Link className="pill-button" to="/open">

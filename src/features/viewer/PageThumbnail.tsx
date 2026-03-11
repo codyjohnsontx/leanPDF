@@ -17,15 +17,16 @@ export function PageThumbnail({ pdfDocument, pageNumber, isActive, onClick }: Pa
 
     async function renderThumbnail() {
       const page = await pdfDocument.getPage(pageNumber);
+      if (cancelled) return;
+
       const viewport = page.getViewport({ scale: 0.22 });
       const canvas = canvasRef.current;
-      if (!canvas) {
-        return;
-      }
+      if (!canvas) return;
+
       const context = canvas.getContext('2d');
-      if (!context) {
-        return;
-      }
+      if (!context) return;
+
+      if (cancelled) return;
 
       canvas.width = viewport.width;
       canvas.height = viewport.height;
@@ -36,9 +37,10 @@ export function PageThumbnail({ pdfDocument, pageNumber, isActive, onClick }: Pa
       });
 
       const currentRenderTask = renderTask;
-      await currentRenderTask.promise;
-      if (cancelled) {
-        currentRenderTask.cancel();
+      try {
+        await currentRenderTask.promise;
+      } catch {
+        // cancelled or render error — ignore
       }
     }
 

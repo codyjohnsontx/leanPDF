@@ -109,38 +109,6 @@ export function HomeRoute() {
             overflow: 'hidden',
           }}
         >
-          <header
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: '16px',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <Link
-              to="/"
-              aria-label="Go to home"
-              style={{
-                display: 'grid',
-                gap: '3px',
-              }}
-            >
-              <strong style={{ fontSize: '1.05rem', letterSpacing: '-0.02em' }}>leanPDF</strong>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Focused PDF workspace</span>
-            </Link>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              {activeDocument ? (
-                <Link className="ghost-button" to="/viewer">
-                  Resume current draft
-                </Link>
-              ) : null}
-              <button className="pill-button" onClick={() => inputRef.current?.click()} type="button">
-                Open PDF
-              </button>
-            </div>
-          </header>
-
           <div
             style={{
               display: 'grid',

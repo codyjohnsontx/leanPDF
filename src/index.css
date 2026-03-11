@@ -539,3 +539,307 @@ img {
     padding-right: 18px;
   }
 }
+
+/* ── Site header ──────────────────────────────────────────── */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10, 13, 18, 0.88);
+  backdrop-filter: blur(16px);
+}
+
+.site-header-inner {
+  width: min(1440px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 14px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-nav-link {
+  padding: 0.45rem 0.82rem;
+  font-size: 0.9rem;
+}
+
+.site-nav-cta {
+  padding: 0.55rem 1rem;
+  font-size: 0.88rem;
+}
+
+/* ── Tools hub ────────────────────────────────────────────── */
+
+.tools-hub-shell {
+  padding-top: 32px;
+  padding-bottom: 60px;
+}
+
+.tools-hub-hero {
+  text-align: center;
+  margin-bottom: 28px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.tools-hub-title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.0;
+  letter-spacing: -0.05em;
+}
+
+.tools-hub-tabs {
+  margin-bottom: 24px;
+  width: fit-content;
+}
+
+.tool-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.tool-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 12px;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.tool-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
+}
+
+.tool-card-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(245, 171, 53, 0.22);
+  color: var(--accent);
+}
+
+.tool-card-title {
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+.tool-card-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.tool-card-cta {
+  width: fit-content;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tools-hub-pdf-cta {
+  margin-top: 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ── Tool page layout ─────────────────────────────────────── */
+
+.tool-page-header {
+  margin-bottom: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.tool-page-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.tool-page-desc {
+  margin: 0;
+}
+
+.tool-page-body {
+  padding: 24px;
+}
+
+/* ── Text tool layout ─────────────────────────────────────── */
+
+.text-tool-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.text-tool-textarea {
+  min-height: 300px;
+  margin-top: 6px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.text-tool-controls {
+  grid-column: 1 / -1;
+}
+
+.text-tool-output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+/* ── Word counter stats ───────────────────────────────────── */
+
+.word-counter-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.word-counter-stat {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 4px;
+}
+
+.word-counter-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ── Keyword density table ────────────────────────────────── */
+
+.keyword-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.keyword-row td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── PDF tool layout ──────────────────────────────────────── */
+
+.pdf-drop-zone {
+  border-radius: 28px;
+  border: 1px dashed var(--border-strong);
+  padding: 48px 32px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  text-align: center;
+  gap: 4px;
+  min-height: 300px;
+  transition: all 180ms ease;
+}
+
+.pdf-drop-zone.is-active {
+  border-color: rgba(245, 171, 53, 0.52);
+  background: linear-gradient(180deg, rgba(245, 171, 53, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.pdf-file-list {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pdf-file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pdf-result {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(88, 214, 141, 0.22);
+  background: rgba(88, 214, 141, 0.05);
+}
+
+.pdf-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.pdf-preview-card { padding: 10px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); display: grid; gap: 8px; transition: border-color 160ms ease, opacity 160ms ease; }
+.pdf-preview-card.will-rotate { border-color: rgba(245,171,53,0.34); background: rgba(245,171,53,0.06); }
+.pdf-preview-card.no-rotate { opacity: 0.45; }
+.pdf-preview-label { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.8rem; color: var(--text-muted); }
+.pdf-preview-badge { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); background: var(--accent-soft); padding: 0.18rem 0.52rem; border-radius: 999px; }
+.pdf-preview-loading { color: var(--text-muted); font-size: 0.92rem; padding: 24px 0; text-align: center; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .text-tool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-hub-tabs {
+    width: 100%;
+  }
+
+  .tool-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-nav-link span {
+    display: none;
+  }
+}

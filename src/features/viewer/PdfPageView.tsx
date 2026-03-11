@@ -38,16 +38,14 @@ export function PdfPageView({
 
     async function renderPage() {
       const page = await pdfDocument.getPage(pageNumber);
+      if (cancelled) return;
+
       const viewport = page.getViewport({ scale: zoom, rotation });
       const canvas = canvasRef.current;
-      if (!canvas) {
-        return;
-      }
+      if (!canvas) return;
 
       const context = canvas.getContext('2d');
-      if (!context) {
-        return;
-      }
+      if (!context) return;
 
       const devicePixelRatio = window.devicePixelRatio || 1;
       canvas.width = Math.floor(viewport.width * devicePixelRatio);
@@ -56,6 +54,8 @@ export function PdfPageView({
       canvas.style.height = `${viewport.height}px`;
       context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
 
+      if (cancelled) return;
+
       renderTask = page.render({
         canvas,
         canvasContext: context,
@@ -63,7 +63,11 @@ export function PdfPageView({
         annotationMode: AnnotationMode.ENABLE_FORMS,
       });
       const currentRenderTask = renderTask;
-      await currentRenderTask.promise;
+      try {
+        await currentRenderTask.promise;
+      } catch {
+        return;
+      }
       if (!cancelled) {
         setSize({ width: viewport.width, height: viewport.height });
       }
