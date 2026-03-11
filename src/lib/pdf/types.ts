@@ -1,9 +1,5 @@
 export type DocumentId = string;
 
-export type DocumentSource =
-  | { kind: 'local-file'; file: File }
-  | { kind: 'object-url'; url: string };
-
 export type ViewerTool =
   | 'move'
   | 'highlight'
@@ -21,16 +17,6 @@ export type ExportMode = 'standard' | 'protected';
 export type ExportOptions = {
   mode: ExportMode;
   password?: string;
-};
-
-export type ViewerSession = {
-  documentId: DocumentId;
-  name: string;
-  pageCount: number;
-  currentPage: number;
-  zoom: number;
-  rotation: ViewerRotation;
-  hasUnsavedChanges: boolean;
 };
 
 export type DocumentProtectionStatus =

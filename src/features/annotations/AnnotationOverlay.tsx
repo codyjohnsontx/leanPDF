@@ -1,4 +1,9 @@
-import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { createId } from '../../lib/utils/ids';
 import type {
   AnnotationRecord,
@@ -53,7 +58,11 @@ function clampPoint(value: Point) {
   };
 }
 
-function normalizePoint(event: ReactPointerEvent<HTMLDivElement>, width: number, height: number): Point {
+function normalizePoint(
+  event: ReactPointerEvent<HTMLDivElement>,
+  width: number,
+  height: number,
+): Point {
   const bounds = event.currentTarget.getBoundingClientRect();
   return clampPoint({
     x: (event.clientX - bounds.left) / width,
@@ -77,8 +86,23 @@ function buildRecord(
   const height = Math.abs(current.y - start.y);
 
   if (tool === 'highlight') {
-    const payload: RectPayload = { x: left, y: top, width, height, color: TOOL_COLORS.highlight, opacity: 0.3 };
-    return { id, kind: 'highlight', pageIndex, authorLabel: 'You', createdAt, updatedAt: createdAt, payload };
+    const payload: RectPayload = {
+      x: left,
+      y: top,
+      width,
+      height,
+      color: TOOL_COLORS.highlight,
+      opacity: 0.3,
+    };
+    return {
+      id,
+      kind: 'highlight',
+      pageIndex,
+      authorLabel: 'You',
+      createdAt,
+      updatedAt: createdAt,
+      payload,
+    };
   }
 
   if (tool === 'shape') {
@@ -90,18 +114,29 @@ function buildRecord(
       color: TOOL_COLORS.shape,
       strokeWidth: 2,
     };
-    return { id, kind: 'shape', pageIndex, authorLabel: 'You', createdAt, updatedAt: createdAt, payload };
+    return {
+      id,
+      kind: 'shape',
+      pageIndex,
+      authorLabel: 'You',
+      createdAt,
+      updatedAt: createdAt,
+      payload,
+    };
   }
 
   if (tool === 'underline' || tool === 'strikeout') {
     const y =
-      tool === 'underline' ? Math.max(start.y, current.y) : Math.min(start.y, current.y) + height * 0.55;
+      tool === 'underline'
+        ? Math.max(start.y, current.y)
+        : Math.min(start.y, current.y) + height * 0.55;
     const payload: LinePayload = {
       x1: left,
       y1: y,
       x2: left + width,
       y2: y,
-      color: tool === 'underline' ? TOOL_COLORS.underline : TOOL_COLORS.strikeout,
+      color:
+        tool === 'underline' ? TOOL_COLORS.underline : TOOL_COLORS.strikeout,
       thickness: 2.4,
     };
     return {
@@ -138,7 +173,10 @@ function buildRecord(
   return null;
 }
 
-function renderAnnotationShape(annotation: AnnotationRecord, isSelected: boolean) {
+function renderAnnotationShape(
+  annotation: AnnotationRecord,
+  isSelected: boolean,
+) {
   const shared = {
     position: 'absolute' as const,
     pointerEvents: 'auto' as const,
@@ -253,21 +291,20 @@ export function AnnotationOverlay({
   onCommit,
 }: AnnotationOverlayProps) {
   const [draft, setDraft] = useState<DraftShape>(null);
-  const activeStrokeRef = useRef<Point[] | null>(null);
+  const activeStrokeRef = useRef<Point[]>([]);
+  const [activeStroke, setActiveStroke] = useState<Point[]>([]);
 
   const inkPath = useMemo(() => {
     if (!draft || draft.kind !== 'ink') {
       return '';
     }
-
-    return draft.strokes
-      .map((stroke) =>
-        stroke
-          .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x * width} ${point.y * height}`)
-          .join(' '),
+    return activeStroke
+      .map(
+        (point, index) =>
+          `${index === 0 ? 'M' : 'L'} ${point.x * width} ${point.y * height}`,
       )
       .join(' ');
-  }, [draft, height, width]);
+  }, [draft, activeStroke, height, width]);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (tool === 'move') {
@@ -300,6 +337,7 @@ export function AnnotationOverlay({
 
     if (tool === 'ink') {
       activeStrokeRef.current = [point];
+      setActiveStroke([point]);
       setDraft({ kind: 'ink', strokes: [[point]] });
       return;
     }
@@ -315,11 +353,8 @@ export function AnnotationOverlay({
     const point = normalizePoint(event, width, height);
 
     if (draft.kind === 'ink') {
-      activeStrokeRef.current = [...(activeStrokeRef.current ?? []), point];
-      setDraft({
-        kind: 'ink',
-        strokes: [activeStrokeRef.current ?? [point]],
-      });
+      activeStrokeRef.current.push(point);
+      setActiveStroke([...activeStrokeRef.current]);
       return;
     }
 
@@ -338,7 +373,7 @@ export function AnnotationOverlay({
       const payload: InkPayload = {
         color: TOOL_COLORS.ink,
         thickness: 2.8,
-        strokes: draft.strokes,
+        strokes: [activeStrokeRef.current ?? []],
       };
       onCommit({
         id: createId('annotation'),
@@ -349,12 +384,19 @@ export function AnnotationOverlay({
         updatedAt: createdAt,
         payload,
       });
-      activeStrokeRef.current = null;
+      activeStrokeRef.current = [];
+      setActiveStroke([]);
       setDraft(null);
       return;
     }
 
-    const annotation = buildRecord(pageIndex, tool, draft.start, draft.current, selectedSignature);
+    const annotation = buildRecord(
+      pageIndex,
+      tool,
+      draft.start,
+      draft.current,
+      selectedSignature,
+    );
     if (annotation) {
       onCommit(annotation);
     }
@@ -377,7 +419,12 @@ export function AnnotationOverlay({
           <svg
             key={annotation.id}
             viewBox={`0 0 ${width} ${height}`}
-            style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              overflow: 'visible',
+              pointerEvents: 'none',
+            }}
           >
             {(annotation.payload as InkPayload).strokes.map((stroke, index) => (
               <path
@@ -404,7 +451,10 @@ export function AnnotationOverlay({
               event.stopPropagation();
               onSelect(annotation.id);
             }}
-            style={renderAnnotationShape(annotation, selectedAnnotationId === annotation.id)}
+            style={renderAnnotationShape(
+              annotation,
+              selectedAnnotationId === annotation.id,
+            )}
           >
             {annotation.kind === 'note' ? (
               <span
@@ -432,7 +482,8 @@ export function AnnotationOverlay({
             top: `${Math.min(draft.start.y, draft.current.y) * 100}%`,
             width: `${Math.abs(draft.current.x - draft.start.x) * 100}%`,
             height: `${Math.abs(draft.current.y - draft.start.y) * 100}%`,
-            background: tool === 'highlight' ? 'rgba(245, 171, 53, 0.25)' : 'transparent',
+            background:
+              tool === 'highlight' ? 'rgba(245, 171, 53, 0.25)' : 'transparent',
             border:
               tool === 'shape'
                 ? `2px solid ${TOOL_COLORS.shape}`
@@ -446,9 +497,20 @@ export function AnnotationOverlay({
       {draft && draft.kind === 'ink' ? (
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'visible',
+            pointerEvents: 'none',
+          }}
         >
-          <path d={inkPath} stroke={TOOL_COLORS.ink} strokeWidth="2.8" strokeLinecap="round" fill="none" />
+          <path
+            d={inkPath}
+            stroke={TOOL_COLORS.ink}
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            fill="none"
+          />
         </svg>
       ) : null}
     </div>

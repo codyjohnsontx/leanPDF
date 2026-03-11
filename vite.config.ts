@@ -36,8 +36,23 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'pdfjs': ['pdfjs-dist'],
+          'pdf-lib': ['pdf-lib'],
+          'libpdf': ['@libpdf/core'],
+          'jszip': ['jszip'],
+        },
+      },
+    },
+  },
   test: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: './src/test/setup.ts',
+    include: ['src/test/**/*.test.{ts,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**', '**/.claire/**'],
   },
 });

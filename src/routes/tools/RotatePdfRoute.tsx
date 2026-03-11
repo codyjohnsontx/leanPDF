@@ -1,51 +1,60 @@
 import { useState, useEffect, useRef } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfToolShell } from '../../features/tools/PdfToolShell';
-import { rotatePdf } from '../../lib/pdf/rotate';
+import { rotatePdfPerPage } from '../../lib/pdf/rotate';
 import { ToolPageLayout } from '../../features/tools/ToolPageLayout';
 import { readFileAsBytes } from '../../lib/utils/fileReader';
-import { loadPdfDocument } from '../../lib/pdf/pdf';
+import { loadPdfDocument } from '../../lib/pdf/viewer';
 
 const MAX_PAGES = 12;
 const PREVIEW_SCALE = 0.5;
 
 type PreviewGridProps = {
   file: File | null;
-  angle: 90 | 180 | 270;
-  target: 'all' | number[];
+  pageRotations: number[];
+  onRotate: (pageIndex: number) => void;
 };
 
-function PdfPreviewGrid({ file, angle, target }: PreviewGridProps) {
+function PdfPreviewGrid({ file, pageRotations, onRotate }: PreviewGridProps) {
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
-  const [pageCount, setPageCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => Boolean(file));
+  const [loadError, setLoadError] = useState<string | null>(null);
   const canvasMapRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const pageCount = pdfDoc?.numPages ?? 0;
 
-  // Effect 1 — load document
   useEffect(() => {
-    if (!file) {
-      setPdfDoc(null);
-      setPageCount(0);
-      return;
-    }
+    if (!file) return;
     let cancelled = false;
-    setIsLoading(true);
+    let currentDoc: PDFDocumentProxy | null = null;
 
-    async function load() {
-      const bytes = await readFileAsBytes(file!);
-      if (cancelled) return;
-      const doc = await loadPdfDocument(bytes);
-      if (cancelled) return;
-      setPdfDoc(doc);
-      setPageCount(doc.numPages);
-      setIsLoading(false);
-    }
+    setLoadError(null);
+    void (async () => {
+      try {
+        const bytes = await readFileAsBytes(file);
+        if (cancelled) return;
+        const document = await loadPdfDocument(bytes);
+        if (cancelled) {
+          await document.destroy();
+          return;
+        }
+        currentDoc = document;
+        setPdfDoc(document);
+      } catch (err) {
+        if (!cancelled) {
+          setPdfDoc(null);
+          setLoadError(err instanceof Error ? err.message : 'Failed to load PDF.');
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
 
-    void load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      void currentDoc?.destroy();
+    };
   }, [file]);
 
-  // Effect 2 — render pages
   useEffect(() => {
     if (!pdfDoc || pageCount === 0) return;
     let cancelled = false;
@@ -64,12 +73,17 @@ function PdfPreviewGrid({ file, angle, target }: PreviewGridProps) {
         if (!ctx) continue;
 
         const dpr = window.devicePixelRatio || 1;
-        const viewport = page.getViewport({ scale: PREVIEW_SCALE, rotation: (page.rotate + angle) % 360 });
+        const additionalRotation = pageRotations[n - 1] ?? 0;
+        const viewport = page.getViewport({
+          scale: PREVIEW_SCALE,
+          rotation: (page.rotate + additionalRotation) % 360,
+        });
 
         canvas.width = Math.round(viewport.width * dpr);
         canvas.height = Math.round(viewport.height * dpr);
-        canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = `${viewport.height}px`;
+        canvas.style.width = '100%';
+        canvas.style.height = 'auto';
+        canvas.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         const task = page.render({ canvas, canvasContext: ctx, viewport });
@@ -87,93 +101,91 @@ function PdfPreviewGrid({ file, angle, target }: PreviewGridProps) {
       cancelled = true;
       renderTasks.forEach((t) => t.cancel());
     };
-  }, [pdfDoc, angle, pageCount]);
+  }, [pdfDoc, pageRotations, pageCount]);
 
   if (!file) return null;
-
-  if (isLoading) {
-    return <div className="pdf-preview-loading">Loading preview…</div>;
-  }
+  if (isLoading) return <div className="pdf-preview-loading">Loading preview…</div>;
+  if (loadError) return <p className="field-error" role="alert">{loadError}</p>;
 
   const limit = Math.min(pageCount, MAX_PAGES);
   const overflow = pageCount - limit;
-
-  function willRotate(pageNum: number): boolean {
-    return target === 'all' || (target as number[]).includes(pageNum);
-  }
 
   return (
     <>
       <div className="pdf-preview-grid">
         {Array.from({ length: limit }, (_, i) => i + 1).map((n) => {
-          const rotates = willRotate(n);
+          const rotation = pageRotations[n - 1] ?? 0;
           return (
-            <div key={n} className={`pdf-preview-card ${rotates ? 'will-rotate' : 'no-rotate'}`}>
-              <canvas
-                ref={(el) => {
-                  const map = canvasMapRef.current;
-                  if (el) map.set(n, el); else map.delete(n);
-                }}
-                style={{ width: '100%', borderRadius: '8px', background: '#fff' }}
-              />
+            <div key={n} className={`pdf-preview-card${rotation !== 0 ? ' is-rotated' : ''}`}>
+              <div className="pdf-preview-canvas-wrap">
+                <canvas
+                  ref={(el) => {
+                    const map = canvasMapRef.current;
+                    if (el) map.set(n, el); else map.delete(n);
+                  }}
+                />
+                <div className="pdf-preview-overlay" aria-hidden="true">
+                  <span className="pdf-preview-overlay-icon">↻</span>
+                </div>
+              </div>
               <div className="pdf-preview-label">
                 <span>Page {n}</span>
-                {rotates && <span className="pdf-preview-badge">will rotate</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {rotation !== 0 && (
+                    <span className="pdf-preview-rotation-badge">+{rotation}°</span>
+                  )}
+                  <button
+                    className="pdf-preview-rotate-btn"
+                    type="button"
+                    title="Rotate 90° clockwise"
+                    onClick={() => onRotate(n - 1)}
+                  >
+                    ↻ Rotate
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
       {overflow > 0 && (
-        <p className="helper-copy" style={{ marginTop: '8px' }}>+ {overflow} more page{overflow !== 1 ? 's' : ''}</p>
+        <p className="helper-copy" style={{ marginTop: '8px' }}>
+          + {overflow} more page{overflow !== 1 ? 's' : ''}
+        </p>
       )}
     </>
   );
 }
 
 export default function RotatePdfRoute() {
-  const [angle, setAngle] = useState<90 | 180 | 270>(90);
-  const [target, setTarget] = useState<'all' | 'custom'>('all');
-  const [pageInput, setPageInput] = useState('');
+  const [pageRotations, setPageRotations] = useState<number[]>([]);
 
-  const pageNumbers: 'all' | number[] = target === 'all'
-    ? 'all'
-    : pageInput.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => !isNaN(n));
+  function handleRotate(pageIndex: number) {
+    setPageRotations((prev) => {
+      const next = [...prev];
+      next[pageIndex] = ((next[pageIndex] ?? 0) + 90) % 360;
+      return next;
+    });
+  }
 
   return (
-    <ToolPageLayout title="Rotate PDF" description="Rotate PDF pages to the correct orientation in just a few clicks.">
+    <ToolPageLayout title="Rotate PDF" description="Click ↻ on any page to rotate it 90° clockwise. Click Rotate PDF to download.">
       <PdfToolShell
         actionLabel="Rotate PDF"
         onAction={async (files) => {
           const bytes = await readFileAsBytes(files[0]);
-          const data = await rotatePdf(bytes, angle, pageNumbers);
+          const data = await rotatePdfPerPage(bytes, pageRotations);
           return { filename: files[0].name.replace('.pdf', '-rotated.pdf'), data };
         }}
+        onFilesChange={() => setPageRotations([])}
       >
         {(files) => (
-          <div className="stack" style={{ gap: '12px' }}>
-            <div>
-              <span className="field-label">Rotation angle</span>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                {([90, 180, 270] as const).map((a) => (
-                  <button key={a} className={`chip-button ${angle === a ? 'is-active' : ''}`} type="button" onClick={() => setAngle(a)}>
-                    {a === 90 ? '90° CW' : a === 180 ? '180°' : '90° CCW'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <span className="field-label">Pages to rotate</span>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <button className={`chip-button ${target === 'all' ? 'is-active' : ''}`} type="button" onClick={() => setTarget('all')}>All pages</button>
-                <button className={`chip-button ${target === 'custom' ? 'is-active' : ''}`} type="button" onClick={() => setTarget('custom')}>Custom pages</button>
-                {target === 'custom' && (
-                  <input className="field-input" value={pageInput} onChange={(e) => setPageInput(e.target.value)} placeholder="e.g. 1, 3, 5" style={{ width: '180px' }} />
-                )}
-              </div>
-            </div>
-            <PdfPreviewGrid file={files[0] ?? null} angle={angle} target={pageNumbers} />
-          </div>
+          <PdfPreviewGrid
+            key={files[0] ? `${files[0].name}:${files[0].lastModified}:${files[0].size}` : 'empty'}
+            file={files[0] ?? null}
+            pageRotations={pageRotations}
+            onRotate={handleRotate}
+          />
         )}
       </PdfToolShell>
     </ToolPageLayout>

@@ -7,11 +7,15 @@ export function convertCase(text: string, mode: CaseMode): string {
     case 'upper': return text.toUpperCase();
     case 'lower': return text.toLowerCase();
     case 'title': {
-      const words = text.toLowerCase().split(/\b/);
-      return words.map((word, i) => {
-        if (!/\w/.test(word)) return word;
-        if (i === 0 || !SMALL_WORDS.has(word)) return word.charAt(0).toUpperCase() + word.slice(1);
-        return word;
+      const tokens = text.toLowerCase().match(/[\w'\u2018\u2019]+|[^\w'\u2018\u2019]+/g) ?? [];
+      let firstWordSeen = false;
+      return tokens.map((word) => {
+        if (!/\w/.test(word)) return word; // non-word token, pass through
+        if (!firstWordSeen) {
+          firstWordSeen = true;
+          return word[0].toUpperCase() + word.slice(1);
+        }
+        return SMALL_WORDS.has(word.toLowerCase()) ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1);
       }).join('');
     }
     case 'sentence': {
@@ -19,14 +23,14 @@ export function convertCase(text: string, mode: CaseMode): string {
     }
     case 'camel': {
       return text.toLowerCase()
-        .replace(/[\s_\-]+(.)/g, (_, c: string) => c.toUpperCase())
+        .replace(/[\s_-]+(.)/g, (_, c: string) => c.toUpperCase())
         .replace(/^(.)/, (c) => c.toLowerCase());
     }
     case 'snake': {
-      return text.toLowerCase().replace(/[\s\-]+/g, '_').replace(/[^\w_]/g, '');
+      return text.toLowerCase().replace(/[\s-]+/g, '_').replace(/[^\w_]/g, '');
     }
     case 'kebab': {
-      return text.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w\-]/g, '');
+      return text.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w-]/g, '');
     }
   }
 }

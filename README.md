@@ -1,13 +1,32 @@
 # leanPDF
 
-leanPDF is a web-first, local-first PDF tool built with React, TypeScript, `pdf.js`, and `pdf-lib`.
+leanPDF is a browser-based, local-first tools app built with React and TypeScript. It combines a lightweight PDF workspace with a growing set of PDF and text utilities, all processed locally in the browser.
 
 ## What is implemented
 
 - Installable PWA shell
-- Local PDF open flow with draft persistence in IndexedDB
-- Multi-page viewer with thumbnails, zoom, rotation, and current-page tracking
-- Full-text page search for text PDFs
+- PDF tools hub with:
+  - merge
+  - split
+  - rotate
+  - PDF to image
+- Text tools hub with:
+  - word counter
+  - case converter
+  - lorem ipsum
+  - remove spaces
+  - line breaks
+  - text sorter
+  - text repeater
+  - slug generator
+  - keyword density
+- Full PDF workspace with:
+  - local PDF open flow and encrypted draft persistence in IndexedDB
+  - multi-page viewer with thumbnails, zoom, rotation, and current-page tracking
+  - full-text page search for text PDFs
+  - form sidebar for common AcroForm field types
+  - signature studio for typed, drawn, and uploaded image signatures
+  - local export back to PDF
 - Annotation tools:
   - highlight
   - underline
@@ -15,16 +34,10 @@ leanPDF is a web-first, local-first PDF tool built with React, TypeScript, `pdf.
   - note
   - shape
   - freehand ink
-- Form sidebar for common AcroForm field types
-- Signature studio:
-  - typed signatures
-  - drawn signatures
-  - uploaded image signatures
-- Export back to PDF using local writeback
 
 ## Security
 
-- **Draft storage (IndexedDB) is encrypted at rest.** PDF bytes are encrypted with AES-GCM-256 using the Web Crypto API before being written to IndexedDB. The key is generated once per browser profile and stored as a JWK in `localStorage`. A fresh random IV is used on every save.
+- **Draft storage (IndexedDB) is encrypted at rest.** Draft encryption uses AES-GCM-256 with a non-extractable `CryptoKey` stored in IndexedDB via structured clone — the raw key material is never exposed to JavaScript. This protects against accidental IndexedDB blob leakage, but any script running in the same origin (including injected or compromised scripts) could access the key from IndexedDB and decrypt drafts. A fresh random IV is used on every save.
 - **Password-protected export** uses AES-256 applied by `@libpdf/core` at export time.
 - **Passwords are never stored** — they are held in memory only for the duration of the session.
 - **No server involved** — all encryption, decryption, and document processing happens locally in the browser.
@@ -37,9 +50,12 @@ npm run dev
 ```
 
 ```bash
-npm run build
+npm run lint
 npm run test:run
+npm run build
 ```
+
+These same checks are used as the baseline health gate for the repo and CI.
 
 ## Notes
 

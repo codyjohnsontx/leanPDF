@@ -1,36 +1,39 @@
-import { getDocument } from 'pdfjs-dist';
+import { getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
 import JSZip from 'jszip';
 
 export type ImageFormat = 'jpeg' | 'png' | 'webp';
 
 async function pageToBlob(
-  pdfBytes: Uint8Array,
+  pdf: PDFDocumentProxy,
   pageNumber: number,
   format: ImageFormat,
   scale: number,
   quality: number,
 ): Promise<Blob> {
-  const pdf = await getDocument({ data: pdfBytes.slice() }).promise;
   const page = await pdf.getPage(pageNumber);
-  const viewport = page.getViewport({ scale });
+  try {
+    const viewport = page.getViewport({ scale });
 
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const ctx = canvas.getContext('2d')!;
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d')!;
 
-  await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+    await page.render({ canvasContext: ctx, viewport, canvas }).promise;
 
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas export failed'));
-      },
-      `image/${format}`,
-      quality,
-    );
-  });
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas export failed'));
+        },
+        `image/${format}`,
+        quality,
+      );
+    });
+  } finally {
+    page.cleanup();
+  }
 }
 
 export async function exportPdfAsImages(
@@ -42,25 +45,28 @@ export async function exportPdfAsImages(
 ): Promise<{ filename: string; data: Blob }> {
   const pdf = await getDocument({ data: bytes.slice() }).promise;
   const total = pdf.numPages;
-  await pdf.destroy();
 
   const ext = format === 'jpeg' ? 'jpg' : format;
 
-  if (total === 1) {
-    onProgress?.(0, 1);
-    const blob = await pageToBlob(bytes, 1, format, scale, quality);
-    onProgress?.(1, 1);
-    return { filename: `page-1.${ext}`, data: blob };
-  }
+  try {
+    if (total === 1) {
+      onProgress?.(0, 1);
+      const blob = await pageToBlob(pdf, 1, format, scale, quality);
+      onProgress?.(1, 1);
+      return { filename: `page-1.${ext}`, data: blob };
+    }
 
-  const zip = new JSZip();
-  for (let i = 1; i <= total; i++) {
-    onProgress?.(i - 1, total);
-    const blob = await pageToBlob(bytes, i, format, scale, quality);
-    const pad = String(i).padStart(3, '0');
-    zip.file(`page-${pad}.${ext}`, blob);
+    const zip = new JSZip();
+    for (let i = 1; i <= total; i++) {
+      onProgress?.(i - 1, total);
+      const blob = await pageToBlob(pdf, i, format, scale, quality);
+      const pad = String(i).padStart(3, '0');
+      zip.file(`page-${pad}.${ext}`, blob);
+    }
+    onProgress?.(total, total);
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    return { filename: `pages.zip`, data: zipBlob };
+  } finally {
+    await pdf.destroy();
   }
-  onProgress?.(total, total);
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  return { filename: `pages.zip`, data: zipBlob };
 }

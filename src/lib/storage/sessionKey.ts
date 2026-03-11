@@ -1,24 +1,25 @@
-const STORAGE_KEY = 'leanpdf-enc-key';
+import { getDb } from './db';
+
+const KEY_ID = 'leanpdf-enc-key';
 
 let _cachedKey: CryptoKey | null = null;
 
 export async function getStorageKey(): Promise<CryptoKey> {
   if (_cachedKey) return _cachedKey;
 
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const database = await getDb();
+  const stored = await database.get('keys', KEY_ID);
   if (stored) {
-    _cachedKey = await crypto.subtle.importKey(
-      'jwk', JSON.parse(stored) as JsonWebKey,
-      { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-    );
+    _cachedKey = stored.key;
     return _cachedKey;
   }
 
+  // Generate a non-extractable key so the raw key material is never accessible
+  // to JavaScript — it can only be used for encrypt/decrypt via the Web Crypto API.
   _cachedKey = await crypto.subtle.generateKey(
-    { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
+    { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
   );
-  const jwk = await crypto.subtle.exportKey('jwk', _cachedKey);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jwk));
+  await database.put('keys', { id: KEY_ID, key: _cachedKey });
   return _cachedKey;
 }
 
