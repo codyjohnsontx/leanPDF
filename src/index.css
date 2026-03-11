@@ -604,6 +604,36 @@ img {
   width: fit-content;
 }
 
+.tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab-button {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.tab-button:hover {
+  color: var(--text-main);
+}
+
+.tab-button.is-active {
+  color: var(--text-main);
+  background: var(--accent-soft);
+  border-color: rgba(245, 171, 53, 0.26);
+  border-radius: 6px;
+}
+
 .tool-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
