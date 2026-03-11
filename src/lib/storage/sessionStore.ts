@@ -74,8 +74,10 @@ export const sessionStore: DraftStore = {
       const bytes = await decryptBytes(key, stored.iv, stored.encryptedBytes);
       return toDraftSessionRecord(stored, bytes);
     } catch {
-      // Key mismatch or corrupt record — delete and treat as no draft
+      // Key mismatch or corrupt record — delete both stores so the recent
+      // entry doesn't appear as a loadable document in listRecentDocuments()
       await database.delete('drafts', sessionId);
+      await database.delete('recents', sessionId);
       return null;
     }
   },
