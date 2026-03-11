@@ -291,26 +291,20 @@ export function AnnotationOverlay({
   onCommit,
 }: AnnotationOverlayProps) {
   const [draft, setDraft] = useState<DraftShape>(null);
-  const activeStrokeRef = useRef<Point[] | null>(null);
-  const [strokeVersion, setStrokeVersion] = useState(0);
+  const activeStrokeRef = useRef<Point[]>([]);
+  const [activeStroke, setActiveStroke] = useState<Point[]>([]);
 
   const inkPath = useMemo(() => {
     if (!draft || draft.kind !== 'ink') {
       return '';
     }
-
-    // Read directly from the ref so we avoid copying the array on every point.
-    // strokeVersion is listed as a dependency so React re-runs this memo each
-    // time a new point is pushed.
-    void strokeVersion;
-    const currentStroke = activeStrokeRef.current ?? [];
-    return currentStroke
+    return activeStroke
       .map(
         (point, index) =>
           `${index === 0 ? 'M' : 'L'} ${point.x * width} ${point.y * height}`,
       )
       .join(' ');
-  }, [draft, strokeVersion, height, width]);
+  }, [draft, activeStroke, height, width]);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (tool === 'move') {
@@ -343,6 +337,7 @@ export function AnnotationOverlay({
 
     if (tool === 'ink') {
       activeStrokeRef.current = [point];
+      setActiveStroke([point]);
       setDraft({ kind: 'ink', strokes: [[point]] });
       return;
     }
@@ -358,9 +353,8 @@ export function AnnotationOverlay({
     const point = normalizePoint(event, width, height);
 
     if (draft.kind === 'ink') {
-      activeStrokeRef.current = activeStrokeRef.current ?? [];
       activeStrokeRef.current.push(point);
-      setStrokeVersion((v) => v + 1);
+      setActiveStroke([...activeStrokeRef.current]);
       return;
     }
 
@@ -390,7 +384,8 @@ export function AnnotationOverlay({
         updatedAt: createdAt,
         payload,
       });
-      activeStrokeRef.current = null;
+      activeStrokeRef.current = [];
+      setActiveStroke([]);
       setDraft(null);
       return;
     }

@@ -7,7 +7,7 @@ export function convertCase(text: string, mode: CaseMode): string {
     case 'upper': return text.toUpperCase();
     case 'lower': return text.toLowerCase();
     case 'title': {
-      const tokens = text.toLowerCase().match(/[\w']+|[^\w']+/g) ?? [];
+      const tokens = text.toLowerCase().match(/[\w'\u2018\u2019]+|[^\w'\u2018\u2019]+/g) ?? [];
       let firstWordSeen = false;
       return tokens.map((word) => {
         if (!/\w/.test(word)) return word; // non-word token, pass through

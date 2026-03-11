@@ -8,13 +8,16 @@ function toStoredDraftRecord(
   encryptedBytes: Uint8Array<ArrayBuffer>,
   iv: Uint8Array<ArrayBuffer>,
 ): StoredDraftRecord {
-  const { bytes: _bytes, ...rest } = data;
-  return { ...rest, encryptedBytes, iv };
+  const rest = { ...data } as Partial<DraftSessionRecord>;
+  delete rest.bytes;
+  return { ...(rest as Omit<DraftSessionRecord, 'bytes'>), encryptedBytes, iv };
 }
 
 function toDraftSessionRecord(stored: StoredDraftRecord, bytes: Uint8Array): DraftSessionRecord {
-  const { encryptedBytes: _enc, iv: _iv, ...rest } = stored;
-  return { ...rest, bytes };
+  const rest = { ...stored } as Partial<StoredDraftRecord>;
+  delete rest.encryptedBytes;
+  delete rest.iv;
+  return { ...(rest as Omit<StoredDraftRecord, 'encryptedBytes' | 'iv'>), bytes };
 }
 
 export const sessionStore: DraftStore = {
@@ -38,12 +41,12 @@ export const sessionStore: DraftStore = {
     const stored = await database.get('drafts', sessionId);
     if (!stored) return null;
 
+    const key = await getStorageKey();
     try {
-      const key = await getStorageKey();
       const bytes = await decryptBytes(key, stored.iv, stored.encryptedBytes);
       return toDraftSessionRecord(stored, bytes);
     } catch {
-      // Key mismatch or corrupt record — delete both stores so the recent
+      // Decrypt or deserialize failure — delete both stores so the recent
       // entry doesn't appear as a loadable document in listRecentDocuments()
       await database.delete('drafts', sessionId);
       await database.delete('recents', sessionId);

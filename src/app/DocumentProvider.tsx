@@ -331,19 +331,18 @@ export function DocumentProvider({ children }: PropsWithChildren) {
           password: state.activeDocument.accessPassword,
           protectionStatus: state.activeDocument.protectionStatus,
         });
-        const bytes =
-          options.mode === 'protected'
-            ? await (await loadSecurityModule()).exportProtectedPdf({
-                bytes: standardBytes,
-                password: options.password ?? '',
-              })
-            : standardBytes;
+        let bytes: Uint8Array = standardBytes;
+        if (options.mode === 'protected') {
+          const { exportProtectedPdf } = await loadSecurityModule();
+          bytes = await exportProtectedPdf({ bytes: standardBytes, password: options.password ?? '' });
+        }
         const exportedName = state.activeDocument.name.replace(/\.pdf$/i, '') || 'document';
         downloadBytes(`${exportedName}-leanpdf.pdf`, bytes, 'application/pdf');
       },
     }),
     // Only the values that actually require the memo to rebuild are listed.
     // Stable useCallback setters are intentionally omitted — they never change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isBusy, navigate, state.activeDocument, state.hydrated, state.recentDocuments, state.signatures],
   );
 

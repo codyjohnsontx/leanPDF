@@ -18,6 +18,7 @@ type PreviewGridProps = {
 function PdfPreviewGrid({ file, pageRotations, onRotate }: PreviewGridProps) {
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [isLoading, setIsLoading] = useState(() => Boolean(file));
+  const [loadError, setLoadError] = useState<string | null>(null);
   const canvasMapRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const pageCount = pdfDoc?.numPages ?? 0;
 
@@ -26,6 +27,7 @@ function PdfPreviewGrid({ file, pageRotations, onRotate }: PreviewGridProps) {
     let cancelled = false;
     let currentDoc: PDFDocumentProxy | null = null;
 
+    setLoadError(null);
     void (async () => {
       try {
         const bytes = await readFileAsBytes(file);
@@ -37,6 +39,11 @@ function PdfPreviewGrid({ file, pageRotations, onRotate }: PreviewGridProps) {
         }
         currentDoc = document;
         setPdfDoc(document);
+      } catch (err) {
+        if (!cancelled) {
+          setPdfDoc(null);
+          setLoadError(err instanceof Error ? err.message : 'Failed to load PDF.');
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -98,6 +105,7 @@ function PdfPreviewGrid({ file, pageRotations, onRotate }: PreviewGridProps) {
 
   if (!file) return null;
   if (isLoading) return <div className="pdf-preview-loading">Loading preview…</div>;
+  if (loadError) return <p className="field-error" role="alert">{loadError}</p>;
 
   const limit = Math.min(pageCount, MAX_PAGES);
   const overflow = pageCount - limit;
