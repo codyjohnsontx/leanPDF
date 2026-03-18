@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type ChangeEvent } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { UploadCloud, X, Download, RotateCcw } from 'lucide-react';
 import { downloadBytes } from '../../lib/utils/download';
 import { downloadBlob } from '../../lib/utils/download';
@@ -20,8 +20,10 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ filename: string; data: Uint8Array | Blob } | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
+  const dropZoneInputRef = useRef<HTMLInputElement | null>(null);
+  const addMoreInputRef = useRef<HTMLInputElement | null>(null);
 
-  function addFiles(incoming: FileList | null) {
+  function addFiles(incoming: FileList | null, inputEl: HTMLInputElement | null) {
     if (!incoming) return;
     const pdfs = Array.from(incoming).filter((f) => f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf');
     const next = multiple ? [...files, ...pdfs] : pdfs.slice(0, 1);
@@ -29,6 +31,7 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
     onFilesChange?.(next);
     setResult(null);
     setError(null);
+    if (inputEl) inputEl.value = '';
   }
 
   function removeFile(index: number) {
@@ -93,18 +96,23 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
         onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
         onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
         onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-        onDrop={(e) => { e.preventDefault(); setDragActive(false); addFiles(e.dataTransfer.files); }}
+        onDrop={(e) => { e.preventDefault(); setDragActive(false); addFiles(e.dataTransfer.files, null); }}
         role="presentation"
       >
         <UploadCloud size={40} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
         <p style={{ margin: '0 0 6px', fontWeight: 700 }}>Drag {multiple ? 'PDFs' : 'a PDF'} here</p>
         <p className="helper-copy" style={{ margin: '0 0 18px' }}>or choose from your device</p>
-        <Button asChild>
-          <label style={{ cursor: 'pointer' }}>
-            Choose {multiple ? 'files' : 'file'}
-            <input hidden type="file" accept={accept} multiple={multiple} onChange={(e: ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)} />
-          </label>
+        <Button type="button" onClick={() => dropZoneInputRef.current?.click()}>
+          Choose {multiple ? 'files' : 'file'}
         </Button>
+        <input
+          ref={dropZoneInputRef}
+          hidden
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          onChange={(e) => addFiles(e.target.files, e.currentTarget)}
+        />
       </div>
     );
   }
@@ -123,12 +131,22 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
             </Button>
           </div>
         ))}
-        <Button asChild variant="ghost" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', alignSelf: 'flex-start', marginTop: '4px' }}>
-          <label>
-            + Add {multiple ? 'more files' : 'different file'}
-            <input hidden type="file" accept={accept} multiple={multiple} onChange={(e: ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)} />
-          </label>
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => addMoreInputRef.current?.click()}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', alignSelf: 'flex-start', marginTop: '4px' }}
+        >
+          + Add {multiple ? 'more files' : 'different file'}
         </Button>
+        <input
+          ref={addMoreInputRef}
+          hidden
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          onChange={(e) => addFiles(e.target.files, e.currentTarget)}
+        />
       </div>
 
       {children(files)}

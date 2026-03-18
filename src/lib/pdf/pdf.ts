@@ -30,18 +30,30 @@ GlobalWorkerOptions.workerSrc = workerSrc;
 
 function hexToRgbTriplet(hex: string) {
   const normalized = hex.replace('#', '');
-  const chunks =
+  const matched =
     normalized.length === 3
       ? normalized.split('').map((part) => `${part}${part}`)
-      : normalized.match(/.{1,2}/g) ?? ['ff', 'ff', 'ff'];
-
+      : normalized.match(/.{1,2}/g) ?? [];
+  const chunks = [matched[0] ?? 'ff', matched[1] ?? 'ff', matched[2] ?? 'ff'];
   const [red, green, blue] = chunks.map((chunk) => Number.parseInt(chunk, 16) / 255);
   return rgb(red, green, blue);
 }
 
-function dataUrlToBytes(dataUrl: string) {
-  const base64 = dataUrl.split(',')[1] ?? '';
-  const binary = atob(base64);
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const commaIndex = dataUrl.indexOf(',');
+  if (commaIndex === -1) {
+    throw new Error('Invalid image data: missing base64 separator.');
+  }
+  const base64 = dataUrl.slice(commaIndex + 1);
+  if (!base64) {
+    throw new Error('Invalid image data: empty base64 segment.');
+  }
+  let binary: string;
+  try {
+    binary = atob(base64);
+  } catch {
+    throw new Error('Invalid image data: base64 decode failed.');
+  }
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) {
     bytes[index] = binary.charCodeAt(index);
@@ -117,6 +129,9 @@ async function drawAnnotation(
   annotation: AnnotationRecord,
   signatureMap: Map<string, StoredSignatureAsset>,
 ) {
+  if (annotation.pageIndex < 0 || annotation.pageIndex >= pdfDoc.getPageCount()) {
+    return;
+  }
   const page = pdfDoc.getPage(annotation.pageIndex);
   const { width, height } = page.getSize();
 
@@ -234,8 +249,14 @@ async function drawAnnotation(
     }
 
     const bytes = dataUrlToBytes(asset.dataUrl);
+    if (asset.kind === 'image') {
+      const supported = asset.mimeType === 'image/jpeg' || asset.mimeType === 'image/jpg' || asset.mimeType === 'image/png';
+      if (!supported) {
+        throw new Error(`Unsupported signature image format: ${asset.mimeType}`);
+      }
+    }
     const image =
-      asset.kind === 'image' && asset.mimeType.includes('jpeg')
+      asset.kind === 'image' && (asset.mimeType === 'image/jpeg' || asset.mimeType === 'image/jpg')
         ? await pdfDoc.embedJpg(bytes)
         : await pdfDoc.embedPng(bytes);
 

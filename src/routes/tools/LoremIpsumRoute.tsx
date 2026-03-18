@@ -27,9 +27,9 @@ export default function LoremIpsumRoute() {
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             {(['words', 'sentences', 'paragraphs'] as LoremMode[]).map((m) => (
-              <button key={m} className={`chip-button ${mode === m ? 'is-active' : ''}`} type="button" onClick={() => setMode(m)}>
+              <Button key={m} variant="chip" type="button" data-active={mode === m} onClick={() => setMode(m)}>
                 {m.charAt(0).toUpperCase() + m.slice(1)}
-              </button>
+              </Button>
             ))}
           </div>
           <input
@@ -49,12 +49,12 @@ export default function LoremIpsumRoute() {
             <div className="text-tool-output-header">
               <span className="field-label">Output</span>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button className={`chip-button ${copied ? 'is-active' : ''}`} type="button" onClick={handleCopy}>
+                <Button variant="chip" type="button" data-active={copied} onClick={handleCopy}>
                   {copied ? 'Copied!' : 'Copy'}
-                </button>
-                <button className="chip-button" type="button" onClick={() => downloadText('lorem-ipsum.txt', output)}>
+                </Button>
+                <Button variant="chip" type="button" onClick={() => downloadText('lorem-ipsum.txt', output)}>
                   Download
-                </button>
+                </Button>
               </div>
             </div>
             <textarea className="field-textarea text-tool-textarea" value={output} readOnly style={{ cursor: 'default', resize: 'none' }} />

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,15 @@ export function ExportModal({ isOpen, isSubmitting, onClose, onExport }: ExportM
   const [confirmation, setConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPassword('');
+      setConfirmation('');
+      setShowPassword(false);
+      setErrorMessage('');
+    }
+  }, [isOpen]);
 
   async function handleExport() {
     if (mode === 'protected') {
@@ -69,7 +78,7 @@ export function ExportModal({ isOpen, isSubmitting, onClose, onExport }: ExportM
           <div className="stack">
             <RadioGroup
               value={mode}
-              onValueChange={(v) => setMode(v as ExportOptions['mode'])}
+              onValueChange={(v) => { setMode(v as ExportOptions['mode']); setErrorMessage(''); }}
               aria-label="Export mode"
             >
               <label className={cn('dialog-option-card', mode === 'standard' && 'is-selected')}>
@@ -105,7 +114,7 @@ export function ExportModal({ isOpen, isSubmitting, onClose, onExport }: ExportM
                   <Input
                     id="export-password"
                     autoComplete="new-password"
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => { setPassword(event.target.value); setErrorMessage(''); }}
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                   />
@@ -115,7 +124,7 @@ export function ExportModal({ isOpen, isSubmitting, onClose, onExport }: ExportM
                   <Input
                     id="export-confirm"
                     autoComplete="new-password"
-                    onChange={(event) => setConfirmation(event.target.value)}
+                    onChange={(event) => { setConfirmation(event.target.value); setErrorMessage(''); }}
                     type={showPassword ? 'text' : 'password'}
                     value={confirmation}
                   />
