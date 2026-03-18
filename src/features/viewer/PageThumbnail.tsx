@@ -75,7 +75,7 @@ export function PageThumbnail({ pdfDocument, pageNumber, isActive, onClick }: Pa
           width: '100%',
           borderRadius: '10px',
           background: '#fff',
-          border: '1px solid var(--border)',
+          border: '1px solid var(--border-alpha)',
         }}
       />
       <span style={{ color: 'var(--text-muted)', fontSize: '0.84rem' }}>Page {pageNumber}</span>

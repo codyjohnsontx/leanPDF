@@ -42,7 +42,7 @@ export default function KeywordDensityRoute() {
                 {results.map((row) => (
                   <tr key={row.keyword} className="keyword-row">
                     <td className="mono">{row.keyword}</td>
-                    <td style={{ textAlign: 'right', color: 'var(--accent)', fontWeight: 700 }}>{row.occurrences}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-accent)', fontWeight: 700 }}>{row.occurrences}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>{row.density}%</td>
                   </tr>
                 ))}

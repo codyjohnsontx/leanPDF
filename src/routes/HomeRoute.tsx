@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { DocumentPasswordDialog } from '../features/viewer/DocumentPasswordDialog';
 import { useDocument } from '../app/useDocument';
 import type { OpenDocumentResult } from '../lib/pdf/types';
+import { Button } from '@/components/ui/button';
 
 function formatLastOpened(value: string) {
   const date = new Date(value);
@@ -138,7 +139,7 @@ export function HomeRoute() {
                 role="presentation"
                 style={{
                   borderRadius: '28px',
-                  border: `1px solid ${dragActive ? 'rgba(245, 171, 53, 0.42)' : 'var(--border)'}`,
+                  border: `1px solid ${dragActive ? 'rgba(245, 171, 53, 0.42)' : 'var(--border-alpha)'}`,
                   background: dragActive
                     ? 'linear-gradient(180deg, rgba(245, 171, 53, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%)'
                     : 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
@@ -160,7 +161,7 @@ export function HomeRoute() {
                     placeItems: 'center',
                     borderRadius: '28px',
                     background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid var(--border)',
+                    border: '1px solid var(--border-alpha)',
                     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
                   }}
                 >
@@ -205,13 +206,13 @@ export function HomeRoute() {
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button className="pill-button" type="button" onClick={() => inputRef.current?.click()}>
+                  <Button type="button" onClick={() => inputRef.current?.click()}>
                     Choose PDF
-                  </button>
+                  </Button>
                   {activeDocument ? (
-                    <Link className="ghost-button" to="/viewer">
-                      Resume draft
-                    </Link>
+                    <Button asChild variant="ghost">
+                      <Link to="/viewer">Resume draft</Link>
+                    </Button>
                   ) : null}
                 </div>
                 {openError ? (
@@ -238,7 +239,7 @@ export function HomeRoute() {
                 style={{
                   borderRadius: '24px',
                   padding: '20px',
-                  border: '1px solid var(--border)',
+                  border: '1px solid var(--border-alpha)',
                   background: 'rgba(255, 255, 255, 0.03)',
                   display: 'grid',
                   gap: '12px',
@@ -246,9 +247,9 @@ export function HomeRoute() {
               >
                 <p className="section-title">Current session</p>
                 {activeDocument ? (
-                  <Link
-                    to="/viewer"
-                    className="ghost-button"
+                  <Button
+                    asChild
+                    variant="ghost"
                     style={{
                       display: 'grid',
                       gap: '6px',
@@ -257,6 +258,7 @@ export function HomeRoute() {
                       padding: '16px',
                     }}
                   >
+                  <Link to="/viewer">
                     <strong>{activeDocument.name}</strong>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
                       Page {activeDocument.currentPage}
@@ -266,16 +268,17 @@ export function HomeRoute() {
                     {activeDocument.protectionStatus.kind === 'encrypted' ? (
                       <span className="helper-copy">Password-protected source PDF</span>
                     ) : null}
-                    <span style={{ color: 'var(--accent)', fontSize: '0.9rem', fontWeight: 600 }}>
+                    <span style={{ color: 'var(--color-accent)', fontSize: '0.9rem', fontWeight: 600 }}>
                       Continue editing
                     </span>
                   </Link>
+                  </Button>
                 ) : (
                   <div
                     style={{
                       borderRadius: '20px',
                       padding: '16px',
-                      border: '1px solid var(--border)',
+                      border: '1px solid var(--border-alpha)',
                       background: 'rgba(255,255,255,0.02)',
                       color: 'var(--text-muted)',
                     }}
@@ -289,7 +292,7 @@ export function HomeRoute() {
                 style={{
                   borderRadius: '24px',
                   padding: '20px',
-                  border: '1px solid var(--border)',
+                  border: '1px solid var(--border-alpha)',
                   background: 'rgba(255, 255, 255, 0.03)',
                   minHeight: '100%',
                 }}
@@ -314,9 +317,9 @@ export function HomeRoute() {
                     </p>
                   ) : (
                     recentList.map((record) => (
-                      <button
+                      <Button
                         key={record.id}
-                        className="ghost-button"
+                        variant="ghost"
                         type="button"
                         style={{
                           textAlign: 'left',
@@ -349,7 +352,7 @@ export function HomeRoute() {
                           <span>{record.pageCount ? `${record.pageCount} pages` : 'Page count pending'}</span>
                           <span>{formatLastOpened(record.lastOpenedAt)}</span>
                         </div>
-                      </button>
+                      </Button>
                     ))
                   )}
                 </div>

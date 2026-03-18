@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useDocument } from '../app/useDocument';
+import { Button } from '@/components/ui/button';
 
 const FEATURES = [
   { icon: '📄', title: 'View & Navigate', desc: 'Fast rendering, text search, and thumbnail sidebar' },
@@ -37,13 +38,13 @@ export function LandingRoute() {
             </p>
 
             <div className="landing-actions">
-              <Link className="pill-button" to="/open">
-                Open app
-              </Link>
+              <Button asChild>
+                <Link to="/open">Open app</Link>
+              </Button>
               {activeDocument ? (
-                <Link className="ghost-button" to="/viewer">
-                  Resume draft
-                </Link>
+                <Button asChild variant="ghost">
+                  <Link to="/viewer">Resume draft</Link>
+                </Button>
               ) : null}
             </div>
           </div>

@@ -92,7 +92,7 @@ function SignatureComposer(props: {
       style={{
         borderRadius: '20px',
         padding: '14px',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--border-alpha)',
         background: props.isActive ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
       }}
     >
@@ -184,7 +184,7 @@ function SignatureComposer(props: {
               width: '100%',
               height: '120px',
               borderRadius: '16px',
-              border: '1px solid var(--border)',
+              border: '1px solid var(--border-alpha)',
               background: 'rgba(255,255,255,0.92)',
               touchAction: 'none',
             }}

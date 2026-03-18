@@ -27,7 +27,7 @@ export default function WordCounterRoute() {
             ['Paragraphs', stats.paragraphs],
           ] as [string, number][]).map(([label, value]) => (
             <div key={label} className="word-counter-stat">
-              <span className="mono word-counter-value" style={{ color: 'var(--accent)' }}>{value.toLocaleString()}</span>
+              <span className="mono word-counter-value" style={{ color: 'var(--color-accent)' }}>{value.toLocaleString()}</span>
               <span className="helper-copy">{label}</span>
             </div>
           ))}
