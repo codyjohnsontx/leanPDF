@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -30,14 +30,12 @@ export function ExportModal({ isOpen, isSubmitting, onClose, onExport }: ExportM
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    if (!isOpen) {
-      setPassword('');
-      setConfirmation('');
-      setShowPassword(false);
-      setErrorMessage('');
-    }
-  }, [isOpen]);
+  function resetForm() {
+    setPassword('');
+    setConfirmation('');
+    setShowPassword(false);
+    setErrorMessage('');
+  }
 
   async function handleExport() {
     if (mode === 'protected') {
@@ -61,7 +59,7 @@ export function ExportModal({ isOpen, isSubmitting, onClose, onExport }: ExportM
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { resetForm(); onClose(); } }}>
       <DialogContent
         onOpenAutoFocus={(e) => {
           e.preventDefault();
