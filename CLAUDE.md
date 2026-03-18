@@ -29,7 +29,7 @@ Operational rules for AI coding agents working in this repo.
 
 ## Module Map
 
-```
+```text
 src/
 ├── app/                  # App shell, routing, global context (DocumentProvider)
 ├── components/ui/        # shadcn/ui primitives: Button, Input, Textarea, Label,
