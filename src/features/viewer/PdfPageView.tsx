@@ -124,7 +124,7 @@ export function PdfPageView({
         padding: '16px',
         borderRadius: '28px',
         background: 'rgba(9, 12, 18, 0.84)',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--border-alpha)',
       }}
     >
       <div

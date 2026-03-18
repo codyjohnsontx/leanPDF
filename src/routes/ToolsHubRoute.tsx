@@ -6,6 +6,8 @@ import {
   ArrowDownAZ, Repeat, Link as LinkIcon, BarChart2,
 } from 'lucide-react';
 import { TOOLS, type ToolCategory } from '../features/tools/toolRegistry';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Layers: <Layers size={26} />,
@@ -47,18 +49,19 @@ export function ToolsHubRoute() {
           <p className="landing-copy">Fast, private, and local — no installation, no uploads, no watermarks.</p>
         </div>
 
-        <div className="tab-bar tools-hub-tabs">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              className={`tab-button ${activeTab === tab.id ? 'is-active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as FilterTab)}
+          className="tools-hub-tabs"
+        >
+          <TabsList>
+            {TABS.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         <div className="tool-card-grid">
           {filtered.map((tool) => (
@@ -73,7 +76,9 @@ export function ToolsHubRoute() {
 
         <div className="tools-hub-pdf-cta">
           <p className="helper-copy">Need the full PDF editor with annotations and signatures?</p>
-          <Link className="ghost-button" to="/open">Open PDF workspace →</Link>
+          <Button asChild variant="ghost">
+            <Link to="/open">Open PDF workspace →</Link>
+          </Button>
         </div>
       </div>
     </main>

@@ -1,3 +1,5 @@
+@tailwind utilities;
+
 :root {
   font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
   line-height: 1.5;
@@ -14,16 +16,38 @@
   --surface: rgba(16, 22, 31, 0.82);
   --surface-strong: rgba(23, 30, 42, 0.96);
   --surface-soft: rgba(255, 255, 255, 0.04);
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-alpha: rgba(255, 255, 255, 0.09);
+  --border-strong-alpha: rgba(255, 255, 255, 0.16);
   --text-main: #edf2f7;
   --text-muted: #9fb1c4;
-  --accent: #f5ab35;
+  --color-accent: #f5ab35;
   --accent-2: #38bdf8;
   --accent-soft: rgba(245, 171, 53, 0.14);
   --success: #58d68d;
   --danger: #ff7b72;
   --shadow: 0 28px 80px rgba(0, 0, 0, 0.36);
+
+  /* shadcn token bridge */
+  --background: 220 31% 6%;
+  --foreground: 213 43% 96%;
+  --card: 220 32% 9%;
+  --card-foreground: 213 43% 96%;
+  --popover: 220 32% 9%;
+  --popover-foreground: 213 43% 96%;
+  --primary: 37 91% 58%;
+  --primary-foreground: 218 26% 9%;
+  --secondary: 220 20% 11%;
+  --secondary-foreground: 213 43% 96%;
+  --muted: 220 20% 12%;
+  --muted-foreground: 213 22% 69%;
+  --accent: 37 50% 20%;
+  --accent-foreground: 37 91% 58%;
+  --destructive: 3 100% 72%;
+  --destructive-foreground: 213 43% 96%;
+  --border: 220 13% 18%;
+  --input: 220 20% 8%;
+  --ring: 37 91% 58%;
+  --radius: 0.75rem;
 }
 
 * {
@@ -90,7 +114,7 @@ img {
 
 .panel {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   border-radius: 24px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
@@ -115,7 +139,7 @@ img {
 }
 
 .pill-button {
-  background: linear-gradient(135deg, var(--accent) 0%, #ffcb6b 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #ffcb6b 100%);
   color: #11161d;
   font-weight: 700;
   padding: 0.78rem 1.18rem;
@@ -124,7 +148,7 @@ img {
 .ghost-button {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-main);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   padding: 0.72rem 1rem;
 }
 
@@ -146,7 +170,7 @@ img {
 .chip-button {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-muted);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   padding: 0.45rem 0.72rem;
 }
 
@@ -165,7 +189,7 @@ img {
 .field-select {
   width: 100%;
   border-radius: 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(8, 12, 18, 0.76);
   color: var(--text-main);
   padding: 0.85rem 0.95rem;
@@ -343,7 +367,7 @@ img {
   gap: 6px;
   padding: 20px;
   border-radius: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -387,11 +411,11 @@ img {
   gap: 14px;
   padding: 16px 20px;
   font-size: 1rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-alpha);
 }
 
 .landing-why-item:first-child {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-alpha);
 }
 
 .landing-why-check {
@@ -400,61 +424,6 @@ img {
   flex-shrink: 0;
 }
 
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(6, 10, 16, 0.72);
-  backdrop-filter: blur(14px);
-}
-
-.dialog-panel {
-  width: min(100%, 560px);
-  max-height: min(88vh, 760px);
-  overflow: auto;
-  border-radius: 28px;
-  border: 1px solid var(--border-strong);
-  background:
-    linear-gradient(180deg, rgba(20, 26, 36, 0.98) 0%, rgba(13, 18, 27, 0.98) 100%);
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.46);
-}
-
-.dialog-header,
-.dialog-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 22px 22px 0;
-}
-
-.dialog-body {
-  padding: 18px 22px 0;
-}
-
-.dialog-actions {
-  padding: 22px;
-}
-
-.dialog-title {
-  margin: 0;
-  font-size: 1.45rem;
-  letter-spacing: -0.03em;
-}
-
-.dialog-copy {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-.dialog-close {
-  background: transparent;
-  color: var(--text-muted);
-  padding: 0;
-}
 
 .dialog-option-grid {
   display: grid;
@@ -466,7 +435,7 @@ img {
   gap: 6px;
   padding: 16px;
   border-radius: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -493,7 +462,7 @@ img {
   gap: 4px;
   padding: 14px 16px;
   border-radius: 18px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -576,31 +545,13 @@ img {
     width: 100%;
   }
 
-  .landing-actions .pill-button,
-  .landing-actions .ghost-button {
+  .landing-actions button,
+  .landing-actions a {
     width: 100%;
     justify-content: center;
     text-align: center;
   }
 
-  .dialog-backdrop {
-    padding: 12px;
-  }
-
-  .dialog-panel {
-    border-radius: 22px;
-  }
-
-  .dialog-header,
-  .dialog-actions {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
-
-  .dialog-body {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
 }
 
 /* ── Site header ──────────────────────────────────────────── */
@@ -609,7 +560,7 @@ img {
   position: sticky;
   top: 0;
   z-index: 40;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-alpha);
   background: rgba(10, 13, 18, 0.88);
   backdrop-filter: blur(16px);
 }
@@ -709,7 +660,7 @@ img {
   gap: 12px;
   padding: 22px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   border-radius: 24px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
@@ -721,7 +672,7 @@ img {
 }
 
 .tool-card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--border-strong-alpha);
   transform: translateY(-2px);
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
 }
@@ -734,7 +685,7 @@ img {
   border-radius: 16px;
   background: var(--accent-soft);
   border: 1px solid rgba(245, 171, 53, 0.22);
-  color: var(--accent);
+  color: var(--color-accent);
 }
 
 .tool-card-title {
@@ -765,7 +716,7 @@ img {
   flex-wrap: wrap;
   padding: 20px;
   border-radius: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -830,7 +781,7 @@ img {
 .word-counter-stat {
   padding: 16px;
   border-radius: 18px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.03);
   display: grid;
   gap: 4px;
@@ -853,14 +804,14 @@ img {
 
 .keyword-row td {
   padding: 8px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-alpha);
 }
 
 /* ── PDF tool layout ──────────────────────────────────────── */
 
 .pdf-drop-zone {
   border-radius: 28px;
-  border: 1px dashed var(--border-strong);
+  border: 1px dashed var(--border-strong-alpha);
   padding: 48px 32px;
   display: grid;
   justify-items: center;
@@ -881,7 +832,7 @@ img {
   gap: 8px;
   padding: 16px;
   border-radius: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -891,7 +842,7 @@ img {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -914,7 +865,7 @@ img {
 .pdf-preview-card {
   padding: 10px;
   border-radius: 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   background: rgba(255, 255, 255, 0.02);
   display: grid;
   gap: 8px;
@@ -980,7 +931,7 @@ img {
   gap: 4px;
   padding: 0.22rem 0.6rem;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-alpha);
   border-radius: 999px;
   color: var(--text-muted);
   font-size: 0.78rem;
@@ -993,14 +944,14 @@ img {
 
 .pdf-preview-rotate-btn:hover {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--color-accent);
   border-color: rgba(245, 171, 53, 0.34);
 }
 
 .pdf-preview-rotation-badge {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--color-accent);
   background: var(--accent-soft);
   padding: 0.18rem 0.42rem;
   border-radius: 999px;

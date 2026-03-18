@@ -2,6 +2,7 @@ import { useState, type ReactNode, type ChangeEvent } from 'react';
 import { UploadCloud, X, Download, RotateCcw } from 'lucide-react';
 import { downloadBytes } from '../../lib/utils/download';
 import { downloadBlob } from '../../lib/utils/download';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   multiple?: boolean;
@@ -74,12 +75,12 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
       <div className="pdf-result">
         <div className="viewer-notice" style={{ fontSize: '1rem', padding: '0.7rem 1rem' }}>✓ Done — your file is ready</div>
         <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <button className="pill-button" type="button" onClick={handleDownload} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <Button type="button" onClick={handleDownload} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <Download size={15} /> Download {result.filename}
-          </button>
-          <button className="ghost-button" type="button" onClick={handleReset} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          </Button>
+          <Button variant="ghost" type="button" onClick={handleReset} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <RotateCcw size={14} /> Start over
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -98,10 +99,12 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
         <UploadCloud size={40} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
         <p style={{ margin: '0 0 6px', fontWeight: 700 }}>Drag {multiple ? 'PDFs' : 'a PDF'} here</p>
         <p className="helper-copy" style={{ margin: '0 0 18px' }}>or choose from your device</p>
-        <label className="pill-button" style={{ cursor: 'pointer' }}>
-          Choose {multiple ? 'files' : 'file'}
-          <input hidden type="file" accept={accept} multiple={multiple} onChange={(e: ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)} />
-        </label>
+        <Button asChild>
+          <label style={{ cursor: 'pointer' }}>
+            Choose {multiple ? 'files' : 'file'}
+            <input hidden type="file" accept={accept} multiple={multiple} onChange={(e: ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)} />
+          </label>
+        </Button>
       </div>
     );
   }
@@ -115,30 +118,31 @@ export function PdfToolShell({ multiple = false, children, actionLabel, onAction
             <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem', flexShrink: 0 }}>
               {file.size > 1024 * 1024 ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : `${Math.round(file.size / 1024)} KB`}
             </span>
-            <button className="tool-button" type="button" onClick={() => removeFile(i)} aria-label="Remove file" style={{ padding: '4px', flexShrink: 0 }}>
+            <Button variant="tool" type="button" onClick={() => removeFile(i)} aria-label="Remove file" style={{ padding: '4px', flexShrink: 0 }}>
               <X size={14} />
-            </button>
+            </Button>
           </div>
         ))}
-        <label className="ghost-button" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', alignSelf: 'flex-start', marginTop: '4px' }}>
-          + Add {multiple ? 'more files' : 'different file'}
-          <input hidden type="file" accept={accept} multiple={multiple} onChange={(e: ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)} />
-        </label>
+        <Button asChild variant="ghost" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', alignSelf: 'flex-start', marginTop: '4px' }}>
+          <label>
+            + Add {multiple ? 'more files' : 'different file'}
+            <input hidden type="file" accept={accept} multiple={multiple} onChange={(e: ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)} />
+          </label>
+        </Button>
       </div>
 
       {children(files)}
 
       {error ? <p className="field-error" role="alert">{error}</p> : null}
 
-      <button
-        className="pill-button"
+      <Button
         type="button"
         onClick={() => void handleAction()}
         disabled={isProcessing || files.length === 0}
         style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', alignSelf: 'flex-start' }}
       >
         {isProcessing ? (progress ?? 'Processing…') : actionLabel}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { generateLorem, type LoremMode } from '../../lib/text/loremIpsum';
 import { ToolPageLayout } from '../../features/tools/ToolPageLayout';
 import { downloadText } from '../../lib/utils/download';
+import { Button } from '@/components/ui/button';
 
 export default function LoremIpsumRoute() {
   const [mode, setMode] = useState<LoremMode>('paragraphs');
@@ -40,7 +41,7 @@ export default function LoremIpsumRoute() {
             onChange={(e) => setCount(Math.max(1, parseInt(e.target.value) || 1))}
             style={{ width: '80px' }}
           />
-          <button className="pill-button" type="button" onClick={handleGenerate}>Generate</button>
+          <Button type="button" onClick={handleGenerate}>Generate</Button>
         </div>
 
         {output ? (
