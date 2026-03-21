@@ -1,15 +1,15 @@
 ## Purpose
 
-This file is read automatically by **Claude Code**. Rules here apply to all Claude Code sessions in this repository.
+This file is read automatically by **OpenAI Codex** and other agents (Cursor, Copilot, Aider). Rules here apply to all agent sessions in this repository.
 
-For OpenAI Codex and other agents (Cursor, Copilot, Aider): see [`AGENTS.md`](./AGENTS.md), which contains the same rules in the universal format those tools read.
+For Claude Code: this repo also has a [`CLAUDE.md`](./CLAUDE.md) which Claude Code reads automatically and contains the same rules.
 
 Agents must follow these instructions to produce safe, predictable, maintainable, minimal changes.
 
 ## Instruction Priority
 
 1. Direct user instruction
-2. This CLAUDE.md
+2. This AGENTS.md
 3. Existing repository patterns
 
 ## Engineering Standard
@@ -91,6 +91,4 @@ npm run build
 npm run lint
 npm run test
 npx tsc --noEmit
-
-
 ```
